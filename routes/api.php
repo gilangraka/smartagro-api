@@ -2,12 +2,15 @@
 
 use App\Http\Controllers\Auth\CodeCheckController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\MasterData\PostCategoryController;
 use App\Http\Controllers\PostController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\LogoutController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -20,6 +23,10 @@ Route::group(['prefix' => 'auth'], function ($route) {
     $route->post('password/email',  ForgotPasswordController::class);
     $route->post('password/code/check', CodeCheckController::class);
     $route->post('password/reset', ResetPasswordController::class);
+
+    $route->post('register', RegisterController::class);
+    $route->post('login', LoginController::class);
+    $route->post('logout', LogoutController::class)->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'master'], function ($route) {

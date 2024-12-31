@@ -23,7 +23,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('category_id')->references('id')->on('m_posts_categories')->cascadeOnDelete();
+            $table->foreign('category_id')->references('id')->on('m_post_categories')->cascadeOnDelete();
         });
     }
 
