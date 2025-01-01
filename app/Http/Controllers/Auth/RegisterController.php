@@ -3,41 +3,33 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;  // Import the RegisterRequest
 use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    public function __invoke(RegisterRequest $request)
     {
-        try {
-            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8|confirmed',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
-            }else{
+        try{
+            $validated = Validator::make($request->all(), $request->rules());
+            if ($validated->fails()) {
+                return response()->json(['error' => $validated->errors()], 400);
+            } else{
                 $user = User::create([
                     'name' => $request->name,
                     'email' => $request->email,
-                    'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                    'password' => Hash::make($request->password),
                 ]);
-
-                $token = $user->createToken('auth_token')->plainTextToken;
-
-                return response()->json([
-                    'data' => $user,
-                        'token' => $token,
-                        'token_type' => 'Bearer'
-                    ], 201);
+                $token = $user->createToken('appToken')->plainTextToken;
+                return response()->json(['token' => $token], 201);
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
