@@ -6,39 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\BaseController;
+use App\Http\Requests\Auth\LoginRequest;
+use Illuminate\Support\Facades\Log;
 
-
-class LoginController extends Controller
+class LoginController extends BaseController
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    public function __invoke(LoginRequest $request)
     {
         try {
-            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-                'email' => 'required|string|email|max:255',
-                'password' => 'required|string|min:8',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['error' => $validator->errors()], 400);
-            } else{
-                $user = User::where('email', $request->email)->first();
-                $token = $user->createToken('auth_token')->plainTextToken;
-
-                if (!$token){
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                } else {
-                    return response()->json([
-                        'data' => Auth::user(),
-                        'token' => $token,
-                        'token_type' => 'Bearer'
-                    ]);
-                }
+            if (!Auth::attempt($request->only('email', 'password'))) {
+                return $this->sendError('Invalid login details', 401);
             }
+
+            $user = User::where('email', $request->email)->firstOrFail();
+            $user->tokens()->delete();
+            $token = $user->createToken('appToken')->plainTextToken;
+            
+            return $this->sendResponse(['token' => $token]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error($e->getMessage());
+            return $this->sendError($e->getMessage(), 500);
         }
     }
+
 }
