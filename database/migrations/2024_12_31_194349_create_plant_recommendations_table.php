@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('plant_recommendations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('season_id');
+            $table->bigInteger('season_id');
+            $table->foreign('season_id')->references('id')->on('m_seasons');
             $table->char('name', 100);
             $table->char('imageUrl', 100);
             $table->timestamps();

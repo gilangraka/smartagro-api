@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\MasterData\PlantRecomendation;
+use App\Http\Controllers\MasterData\SeasonController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -32,6 +34,12 @@ Route::group(['prefix' => 'auth'], function ($route) {
 Route::group(['prefix' => 'master'], function ($route) {
     $route->apiResource('post-category', PostCategoryController::class)->only(['index', 'show']);
     $route->apiResource('post-category', PostCategoryController::class)->except(['index', 'show'])->middleware('auth:sanctum');
+
+
+    $route->get('season/current', [SeasonController::class, 'current_season']);
+    $route->apiResource('season', SeasonController::class);
+
+    $route->apiResource('plant-recomendations', PlantRecomendation::class);
 });
 
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
