@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('plant_recommendations', function (Blueprint $table) {
+        Schema::create('discusses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('season_id')->constrained('m_seasons')->onDelete('cascade');
-            $table->char('name', 100);
-            $table->char('imageUrl', 100);
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('title', 255);
+            $table->string('slug')->unique();
+            $table->longText('content');
+            $table->string('imageUrl', 255)->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('plant_recommendations');
+        Schema::dropIfExists('discusses');
     }
 };
