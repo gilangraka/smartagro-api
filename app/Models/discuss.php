@@ -18,8 +18,17 @@ class Discuss extends Model
         'imageUrl',
     ];
 
+    public function discuss()
+    {
+        return $this->belongsTo(Discuss::class, 'discuss_id');
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function discussComments(){
+        return $this->hasMany(DiscussComment::class, 'discus_id');
     }
 }

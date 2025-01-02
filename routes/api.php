@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\MasterData\PlantRecomendation;
 use App\Http\Controllers\MasterData\SeasonController;
+use App\Http\Controllers\DiscussesController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -40,6 +41,15 @@ Route::group(['prefix' => 'master'], function ($route) {
     $route->apiResource('season', SeasonController::class);
 
     $route->apiResource('plant-recomendations', PlantRecomendation::class);
+});
+
+Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
+    Route::get('/', [DiscussesController::class, 'index'])->name('discusses.index');
+    Route::get('/{id}', [DiscussesController::class, 'show'])->name('discusses.show');
+    Route::post('/', [DiscussesController::class, 'store'])->name('discusses.store');
+    Route::put('/{id}', [DiscussesController::class, 'update'])->name('discusses.update');
+    Route::delete('/{id}', [DiscussesController::class, 'destroy'])->name('discusses.destroy');
+    Route::post('/comment', [DiscussesController::class, 'comment'])->name('discusses.comment');
 });
 
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
