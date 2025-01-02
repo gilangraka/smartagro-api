@@ -9,27 +9,48 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Exception;
+
 
 class LoginController extends BaseController
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(LoginRequest $request)
+    public function __invoke(Request $request)
     {
         try {
-            if (!Auth::attempt($request->only('email', 'password'))) {
-                return $this->sendError('Invalid login details', 401);
+            $credentials = $request->validate([
+                'email' => 'required|string|email',
+                'password' => 'required|string',
+            ]);
+
+            if (!Auth::attempt($credentials)) {
+                Log::warning('Failed login attempt', ['email' => $request->email]);
+                return $this->sendError('Invalid email or password.', 401);
             }
 
-            $user = User::where('email', $request->email)->firstOrFail();
-            $user->tokens()->delete();
-            $token = $user->createToken('appToken')->plainTextToken;
-            
-            return $this->sendResponse(['token' => $token]);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return $this->sendError($e->getMessage(), 500);
+            $user = Auth::user();
+
+            $token = $user->createToken('AuthToken')->plainTextToken;
+
+            Log::info('User logged in successfully', ['user_id' => $user->id, 'email' => $user->email]);
+
+            return $this->sendResponse([
+                'user' => $user,
+                'token' => $token,
+            ], 'Login successful.');
+        } 
+        
+        catch (ValidationException $e) {
+            Log::error('Validation error during login', ['errors' => $e->errors()]);
+            return $this->sendError($e->errors(), 422);
+        } 
+        
+        catch (Exception $e) {
+            Log::critical('Unexpected error during login', ['message' => $e->getMessage()]);
+            return $this->sendError('An unexpected error occurred.', 500);
         }
     }
 

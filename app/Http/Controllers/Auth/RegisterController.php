@@ -3,34 +3,40 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\RegisterRequest;  // Import the RegisterRequest
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
-class RegisterController extends Controller
+use App\Models\User;
+use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+
+class RegisterController extends BaseController
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(RegisterRequest $request)
+    public function __invoke(Request $request)
     {
-        try{
-            $validated = Validator::make($request->all(), $request->rules());
-            if ($validated->fails()) {
-                return response()->json(['error' => $validated->errors()], 400);
-            } else{
-                $user = User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                ]);
-                $token = $user->createToken('appToken')->plainTextToken;
-                return response()->json(['token' => $token], 201);
-            }
-        }
-        catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $user = User::create([
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+            ]);
+
+            $token = $user->createToken('authToken')->plainTextToken;
+
+            return $this->sendResponse(['user' => $user, 'token' => $token], 'User registered successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->sendError($e->errors(), 422);
+        } catch (\Exception $e) {
+            return $this->sendError('An unexpected error occurred.', 500);
         }
     }
 }
