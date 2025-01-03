@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\BaseController;
 use App\Http\Controllers\MasterData\PlantRecomendation;
 use App\Http\Controllers\MasterData\SeasonController;
 use App\Http\Controllers\DiscussesController;
@@ -55,3 +56,8 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
+
+Route::any('{any}', function () {
+    $controller = new BaseController();
+    return $controller->sendError('Route not found', 404);
+})->where('any', '.*');
