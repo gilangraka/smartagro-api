@@ -60,4 +60,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(PostComment::class, 'user_id');
     }
+
+    public function historyDiseases()
+    {
+        return $this->hasMany(HistoryDisease::class, 'user_id');
+    }
 }

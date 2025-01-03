@@ -28,20 +28,4 @@ class RegisterRequest extends FormRequest
             'password' => 'required|string|min:8|confirmed',
         ];
     }
-
-    /**
-     * Get the error messages for the defined validation rules.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'required' => 'O campo :attribute é obrigatório',
-            'min' => 'O campo :attribute deve conter pelo menos 8 caracteres',
-            'max' => 'O campo :attribute não pode ultrapassar 255 caracteres',
-            'unique' => 'Email já cadastrado',
-            'confirmed' => 'Senhas não conferem',
-        ];
-    }
 }
