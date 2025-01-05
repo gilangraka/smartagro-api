@@ -15,6 +15,8 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\MasterData\PlantRecomendation;
 use App\Http\Controllers\MasterData\SeasonController;
 use App\Http\Controllers\DiscussesController;
+use App\Http\Controllers\PlantDisease\User\AddHistoryController;
+use App\Http\Controllers\PlantDisease\User\CheckTranslationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -56,6 +58,10 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
+
+Route::post('plant-disease', AddHistoryController::class)->middleware('auth:sanctum');
+
+Route::post('plant-disease/check-translation', CheckTranslationController::class)->middleware('auth:sanctum');
 
 Route::any('{any}', function () {
     $controller = new BaseController();
