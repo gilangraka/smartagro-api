@@ -82,6 +82,41 @@ class AddHistoryController extends BaseController
                 log::info($treatment_prevention);
             }
 
+            $conversation = Http::withHeaders([
+            'Api-Key' => env('PLANT_ID_API_KEY'),
+            ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
+                    "question"=>$treatment_chemical."Translate this text into Indonesian while maintaining proper capitalization.",
+                    "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                    "temperature"=> 0.5,
+                    "app_name"=> "AgroLens"
+            ]);
+            $conversation = Http::withHeaders([
+                'Api-Key' => env('PLANT_ID_API_KEY'),
+            ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
+                "question"=>$treatment_biological."Translate this text into Indonesian while maintaining proper capitalization.",
+                "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                "temperature"=> 0.5,
+                "app_name"=> "AgroLens"
+            ]);
+            $conversation = Http::withHeaders([
+                'Api-Key' => env('PLANT_ID_API_KEY'),
+            ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
+                "question"=>$treatment_prevention."Translate this text into Indonesian while maintaining proper capitalization.",
+                "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                "temperature"=> 0.5,
+                "app_name"=> "AgroLens"
+            ]);
+
+            if ($conversation->failed()) {
+                Log::error('Plant.ID API Error', ['status' => $conversation->status()]);
+                Storage::delete($filePath); 
+                return $this->sendError('Failed to get response from Plant.ID API', $conversation->status());
+            }
+
+            $treatment_chemical = $conversation['messages'][1]['content'];
+            $treatment_biological = $conversation['messages'][3]['content'];
+            $treatment_prevention = $conversation['messages'][5]['content'];
+
             $chemical = Chemical::create([
                 'disease_name' => $disease,
                 'treatment' => $treatment_chemical,
