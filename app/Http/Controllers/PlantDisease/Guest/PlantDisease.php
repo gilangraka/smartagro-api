@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\PlantDisease\User;
+namespace App\Http\Controllers\PlantDisease\Guest;
 
+use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
-use App\Models\HistoryDisease;
-use App\Http\Controllers\BaseController;
 use App\Models\Treatment;
+use App\Models\HistoryDisease;
 
-class AddHistoryController extends BaseController
+class PlantDisease extends BaseController
 {
     /**
      * Handle the incoming request.

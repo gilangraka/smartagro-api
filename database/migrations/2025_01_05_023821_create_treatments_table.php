@@ -13,16 +13,10 @@ return new class extends Migration
     {
         Schema::create('treatments', function (Blueprint $table) {
             $table->id();
-            $table->string('disease_name');
+            $table->longText('chemical_treatment');
+            $table->longText('biological_treatment');
+            $table->longText('prevention_treatment');
             
-            $table->unsignedBigInteger('chemical_id');
-            $table->unsignedBigInteger('biological_id');
-            $table->unsignedBigInteger('prevention_id');
-            
-            $table->foreign('chemical_id')->references('id')->on('chemicals')->onDelete('cascade');
-            $table->foreign('biological_id')->references('id')->on('biologicals')->onDelete('cascade');
-            $table->foreign('prevention_id')->references('id')->on('preventions')->onDelete('cascade');
-
             $table->timestamps();
         });
     }

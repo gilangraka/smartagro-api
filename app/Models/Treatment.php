@@ -7,26 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Treatment extends Model
 {
     protected $fillable = [
-        'disease_name',
-        'chemical_id',
-        'biological_id',
-        'prevention_id',
+        'chemical_treatment',
+        'biological_treatment',
+        'prevention_treatment',
     ];
-
-    public function chemical()
-    {
-        return $this->belongsTo(Chemical::class);
-    }
-
-    public function biological()
-    {
-        return $this->belongsTo(Biological::class);
-    }
-
-    public function prevention()
-    {
-        return $this->belongsTo(Prevention::class);
-    }
 
     public function historyDisease()
     {
