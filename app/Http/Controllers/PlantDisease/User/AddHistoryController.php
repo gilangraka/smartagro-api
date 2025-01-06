@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\PlantDisease\User;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -85,24 +84,24 @@ class AddHistoryController extends BaseController
             $conversation = Http::withHeaders([
             'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
-                    "question"=>$treatment_chemical."Translate this text into Indonesian while maintaining proper capitalization.",
-                    "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                    "question" => $treatment_chemical . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
+                    "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                     "temperature"=> 0.5,
                     "app_name"=> "AgroLens"
             ]);
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
-                "question"=>$treatment_biological."Translate this text into Indonesian while maintaining proper capitalization.",
-                "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                "question" => $treatment_chemical . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
+                "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
             ]);
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$accessToken.'/conversation', [
-                "question"=>$treatment_prevention."Translate this text into Indonesian while maintaining proper capitalization.",
-                "prompt"=> "Avoid adding extra explanations to easy to understand.",
+                "question" => $treatment_chemical . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
+                "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
             ]);

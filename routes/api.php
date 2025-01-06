@@ -61,8 +61,6 @@ Route::post('post/comment', [PostController::class, 'comment'])->middleware('aut
 
 Route::post('plant-disease', AddHistoryController::class)->middleware('auth:sanctum');
 
-Route::post('plant-disease/check-translation', CheckTranslationController::class)->middleware('auth:sanctum');
-
 Route::any('{any}', function () {
     $controller = new BaseController();
     return $controller->sendError('Route not found', 404);
