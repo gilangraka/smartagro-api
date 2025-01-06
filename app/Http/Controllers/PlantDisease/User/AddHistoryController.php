@@ -21,12 +21,12 @@ class AddHistoryController extends BaseController
     {
         try {
             $validatedData = $request->validate([
-                'imageInput' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
+                'imageUrl' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
                 'lat' => 'required|numeric',
                 'long' => 'required|numeric',
             ]);
 
-            $file = $request->file('imageInput');
+            $file = $request->file('imageUrl');
             $filePath = $file->store('plant_diseases', 'public');
             $fileUrl = asset('storage/' . $filePath);
 
@@ -46,6 +46,7 @@ class AddHistoryController extends BaseController
                 )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
                     'latitude' => $validatedData['lat'],
                     'longitude' => $validatedData['long'],
+                    'similar_images' => 'true'
                 ])->json();
             });
 
@@ -56,9 +57,12 @@ class AddHistoryController extends BaseController
             }
 
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
-            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
             $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
+
+            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'];
+
+            $image_url = $responseData['input']['images'][0];
 
             $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'];
 
@@ -97,15 +101,17 @@ class AddHistoryController extends BaseController
 
             $historyDisease = HistoryDisease::create([
                 'user_id' => $userId,
-                'imageUrl' => $fileUrl,
+                'imageUrl' => $image_url,
                 'lat' => $validatedData['lat'],
                 'long' => $validatedData['long'],
                 'disease' => $disease,
                 'probability' => $probability,
-                'similar_images' => $similar_image, 
+                'similar_images' => $similar_image,
                 'treatment_id' => $treatment->id,
                 'is_redundant' => $redundant,
             ]);
+
+            $historyDisease = HistoryDisease::with('treatment:chemical_treatment,biological_treatment,prevention_treatment',)->find($historyDisease->id);
 
             Storage::delete($filePath);
 

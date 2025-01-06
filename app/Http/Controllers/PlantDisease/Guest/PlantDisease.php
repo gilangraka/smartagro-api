@@ -21,20 +21,14 @@ class PlantDisease extends BaseController
     {
         try {
             $validatedData = $request->validate([
-                'imageInput' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
+                'imageUrl' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
                 'lat' => 'required|numeric',
                 'long' => 'required|numeric',
             ]);
 
-            $file = $request->file('imageInput');
+            $file = $request->file('imageUrl');
             $filePath = $file->store('plant_diseases', 'public');
             $fileUrl = asset('storage/' . $filePath);
-
-            $userId = Auth::id();
-            if (!$userId) {
-                Storage::delete($filePath); 
-                return $this->sendError('User not authenticated', 401);
-            }
 
             $cacheKey = md5($file->getRealPath() . $validatedData['lat'] . $validatedData['long']);
 
@@ -46,6 +40,7 @@ class PlantDisease extends BaseController
                 )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
                     'latitude' => $validatedData['lat'],
                     'longitude' => $validatedData['long'],
+                    'similar_images' => 'true'
                 ])->json();
             });
 
@@ -56,11 +51,14 @@ class PlantDisease extends BaseController
             }
 
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
-            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
             $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
 
             $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'];
+
+            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'];
+
+            $image_url = $responseData['input']['images'][0];
 
             $treatment_chemical = $treatment['chemical'] ? implode(' ', $treatment['chemical']) : null;
             $treatment_biological = $treatment['biological'] ? implode(' ', $treatment['biological']) : null;
@@ -75,6 +73,7 @@ class PlantDisease extends BaseController
                 "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
+
             ]);
 
             if ($conversation->failed()) {
@@ -88,24 +87,23 @@ class PlantDisease extends BaseController
             $treatment_biological = $translatedText[1] ?? null;
             $treatment_prevention = $translatedText[2] ?? null;
 
-            $treatment = Treatment::create([
+            $treatment = [
                 'disease_name' => $disease,
                 'chemical_treatment' => $treatment_chemical,
                 'biological_treatment' => $treatment_biological,
                 'prevention_treatment' => $treatment_prevention,
-            ]);
+            ];
 
-            $historyDisease = HistoryDisease::create([
-                'user_id' => $userId,
-                'imageUrl' => $fileUrl,
+            $historyDisease = [
+                'imageUrl' => $image_url,
                 'lat' => $validatedData['lat'],
                 'long' => $validatedData['long'],
                 'disease' => $disease,
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
-                'treatment_id' => $treatment->id,
+                'treatment_id' => $treatment,
                 'is_redundant' => $redundant,
-            ]);
+            ];
 
             Storage::delete($filePath);
 

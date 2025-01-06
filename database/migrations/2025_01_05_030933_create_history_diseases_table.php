@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('disease');
             $table->boolean('is_redundant')->default(false);
             $table->decimal('probability', 8, 2)->nullable();
-            $table->string('similar_images')->nullable();
+            $table->text('similar_images')->nullable();
             $table->foreignId('treatment_id')->constrained('treatments');
             $table->timestamps();
         });

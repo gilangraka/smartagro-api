@@ -67,7 +67,7 @@ Route::apiResource('post', PostController::class)->except(['index', 'show'])->mi
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
 
 Route::group(['prefix' => 'plant-disease'], function ($route) {
-    $route->get('guest', [PlantDisease::class, 'guest']);
+    $route->post('guest', PlantDisease::class);
     $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
 });
 
