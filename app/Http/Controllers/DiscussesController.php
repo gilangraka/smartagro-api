@@ -150,27 +150,6 @@ class DiscussesController extends BaseController
     }
 
     /**
-     * Add a comment to a discussion.
-     */
-    public function comment(Request $request)
-    {
-        try {
-            $validatedData = $request->validate([
-                'discuss_id' => 'required|exists:discusses,id',
-                'comment' => 'required|string',
-            ]);
-
-            $validatedData['user_id'] = Auth::id();
-
-            $data = DiscussComment::create($validatedData);
-
-            return $this->sendResponse($data, 'Comment added successfully.');
-        } catch (\Exception $e) {
-            return $this->sendError('Error adding comment: ' . $e->getMessage(), 500);
-        }
-    }
-
-    /**
      * Generate a unique slug for a discussion.
      */
     private function generateSlug($title)

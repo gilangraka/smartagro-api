@@ -17,6 +17,7 @@ use App\Http\Controllers\MasterData\SeasonController;
 use App\Http\Controllers\DiscussesController;
 use App\Http\Controllers\PlantDisease\Guest\PlantDisease;
 use App\Http\Controllers\PlantDisease\User\AddHistoryController;
+use App\Http\Controllers\DiscussesCommentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -52,16 +53,23 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
     Route::post('/', [DiscussesController::class, 'store'])->name('discusses.store');
     Route::put('/{id}', [DiscussesController::class, 'update'])->name('discusses.update');
     Route::delete('/{id}', [DiscussesController::class, 'destroy'])->name('discusses.destroy');
-    Route::post('/comment', [DiscussesController::class, 'comment'])->name('discusses.comment');
+    
+    Route::prefix('comment')->group(function () {
+        Route::get('/{discuss_id}', [DiscussesCommentController::class, 'index'])->name('discusses.comment.index');
+        Route::post('/', [DiscussesCommentController::class, 'create'])->name('discusses.comment.create');
+        Route::put('/{id}', [DiscussesCommentController::class, 'update'])->name('discusses.comment.update');
+        Route::delete('/{id}', [DiscussesCommentController::class, 'destroy'])->name('discusses.comment.destroy');
+    });
 });
 
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
 
-Route::post('plant-disease', AddHistoryController::class)->middleware('auth:sanctum');
-
-Route::post('plant-disease/guest', PlantDisease::class);
+Route::group(['prefix' => 'plant-disease'], function ($route) {
+    $route->get('guest', [PlantDisease::class, 'guest']);
+    $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
+});
 
 Route::any('{any}', function () {
     $controller = new BaseController();
