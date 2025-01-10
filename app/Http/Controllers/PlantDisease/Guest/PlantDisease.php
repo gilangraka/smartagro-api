@@ -44,6 +44,8 @@ class PlantDisease extends BaseController
                 ])->json();
             });
 
+            Log::info('API Response', ['response' => $responseData]);
+
             if (!isset($responseData['result']['disease']['suggestions'][0])) {
                 Log::error('Invalid API Response', ['response' => $responseData]);
                 Storage::delete($filePath); 
