@@ -50,19 +50,10 @@ Route::group(['prefix' => 'master'], function ($route) {
 });
 
 Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
-    Route::get('/', [DiscussesController::class, 'index'])->name('discusses.index');
-    Route::get('/{id}', [DiscussesController::class, 'show'])->name('discusses.show');
-    Route::post('/', [DiscussesController::class, 'store'])->name('discusses.store');
-    Route::put('/{id}', [DiscussesController::class, 'update'])->name('discusses.update');
-    Route::delete('/{id}', [DiscussesController::class, 'destroy'])->name('discusses.destroy');
-
-    Route::prefix('comment')->group(function () {
-        Route::get('/{discuss_id}', [DiscussesCommentController::class, 'index'])->name('discusses.comment.index');
-        Route::post('/', [DiscussesCommentController::class, 'create'])->name('discusses.comment.create');
-        Route::put('/{id}', [DiscussesCommentController::class, 'update'])->name('discusses.comment.update');
-        Route::delete('/{id}', [DiscussesCommentController::class, 'destroy'])->name('discusses.comment.destroy');
-    });
+    Route::apiResource('/', DiscussesController::class)->parameters(['' => 'id']);
+    Route::apiResource('/comments', DiscussesCommentController::class)->except(['show']);
 });
+
 
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
