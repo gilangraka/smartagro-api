@@ -38,13 +38,15 @@ Route::group(['prefix' => 'auth'], function ($route) {
 
 Route::group(['prefix' => 'master'], function ($route) {
     $route->apiResource('post-category', PostCategoryController::class)->only(['index', 'show']);
-    $route->apiResource('post-category', PostCategoryController::class)->except(['index', 'show'])->middleware('auth:sanctum');
+    $route->apiResource('post-category', PostCategoryController::class)->except(['index', 'show'])->middleware('can:action_master');
 
 
     $route->get('season/current', [SeasonController::class, 'current_season']);
-    $route->apiResource('season', SeasonController::class);
+    $route->apiResource('season', SeasonController::class)->only(['index', 'show']);
+    $route->apiResource('season', SeasonController::class)->except(['index', 'show'])->middleware('can:action_master');
 
-    $route->apiResource('plant-recomendations', PlantRecomendation::class);
+    $route->apiResource('plant-recomendations', PlantRecomendation::class)->only(['index', 'show']);
+    $route->apiResource('plant-recomendations', PlantRecomendation::class)->except(['index', 'show'])->middleware('can:action_master');
 });
 
 Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
@@ -53,7 +55,7 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
     Route::post('/', [DiscussesController::class, 'store'])->name('discusses.store');
     Route::put('/{id}', [DiscussesController::class, 'update'])->name('discusses.update');
     Route::delete('/{id}', [DiscussesController::class, 'destroy'])->name('discusses.destroy');
-    
+
     Route::prefix('comment')->group(function () {
         Route::get('/{discuss_id}', [DiscussesCommentController::class, 'index'])->name('discusses.comment.index');
         Route::post('/', [DiscussesCommentController::class, 'create'])->name('discusses.comment.create');
