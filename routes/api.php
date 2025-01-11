@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\BaseController;
-use App\Http\Controllers\MasterData\PlantRecomendation;
+use App\Http\Controllers\PlantRecomendation;
 use App\Http\Controllers\MasterData\SeasonController;
 use App\Http\Controllers\DiscussesController;
 use App\Http\Controllers\PlantDisease\Guest\PlantDisease;
