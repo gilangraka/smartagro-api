@@ -124,8 +124,8 @@ class AddHistoryController extends BaseController
 
             $historyDisease = [
                 'imageUrl' => $image_url,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
+                'lat' => $latitude,
+                'long' => $longitude,
                 'disease' => $disease,
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
