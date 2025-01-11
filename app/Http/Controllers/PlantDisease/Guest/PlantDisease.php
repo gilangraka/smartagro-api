@@ -21,25 +21,30 @@ class PlantDisease extends BaseController
     {
         try {
             $validatedData = $request->validate([
-                'imageUrl' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
-                'lat' => 'required|numeric',
-                'long' => 'required|numeric',
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
             ]);
 
-            $file = $request->file('imageUrl');
+            // Konversi latitude dan longitude menjadi angka float
+            $latitude = (float) $validatedData['latitude'];
+            $longitude = (float) $validatedData['longitude'];
+
+            $file = $request->file('image');
             $filePath = $file->store('plant_diseases', 'public');
             $fileUrl = asset('storage/' . $filePath);
 
-            $cacheKey = md5($file->getRealPath() . $validatedData['lat'] . $validatedData['long']);
+            $cacheKey = md5($file->getRealPath() . $latitude . $longitude);
 
-            $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $validatedData) {
+            // Periksa cache untuk data
+            $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $latitude, $longitude) {
                 return Http::withHeaders([
                     'Api-Key' => env('PLANT_ID_API_KEY'),
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
                 )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
-                    'latitude' => $validatedData['lat'],
-                    'longitude' => $validatedData['long'],
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
                     'similar_images' => 'true'
                 ])->json();
             });
@@ -56,11 +61,9 @@ class PlantDisease extends BaseController
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
             $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
 
-            $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'];
-
-            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'];
-
-            $image_url = $responseData['input']['images'][0];
+            $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'] ?? [];
+            $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
+            $image_url = $responseData['input']['images'][0] ?? null;
 
             $treatment_chemical = $treatment['chemical'] ? implode(' ', $treatment['chemical']) : null;
             $treatment_biological = $treatment['biological'] ? implode(' ', $treatment['biological']) : null;
@@ -75,7 +78,6 @@ class PlantDisease extends BaseController
                 "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
-
             ]);
 
             if ($conversation->failed()) {
@@ -84,7 +86,7 @@ class PlantDisease extends BaseController
                 return $this->sendError('Failed to get response from Plant.ID API', $conversation->status());
             }
 
-            $translatedText = explode("\n\n", $conversation['messages'][1]['content']);
+            $translatedText = explode("\n\n", $conversation['messages'][1]['content'] ?? '');
             $treatment_chemical = $translatedText[0] ?? null;
             $treatment_biological = $translatedText[1] ?? null;
             $treatment_prevention = $translatedText[2] ?? null;
@@ -98,8 +100,8 @@ class PlantDisease extends BaseController
 
             $historyDisease = [
                 'imageUrl' => $image_url,
-                'lat' => $validatedData['lat'],
-                'long' => $validatedData['long'],
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'disease' => $disease,
                 'probability' => $probability,
                 'similar_images' => $similar_image, 

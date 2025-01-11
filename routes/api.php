@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
 });
 
 
+
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
