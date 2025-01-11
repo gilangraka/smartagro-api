@@ -11,50 +11,58 @@ class SeasonController extends Controller
 {
     public function current_season(Request $request)
     {
-        try{
+        try {
             $current_date = date('Y-m-d');
-            $season = MSeason::where('start_date', '<=', $current_date)->where('end_date', '>=', $current_date)->first();
+            $season = MSeason::where('start_date', '<=', $current_date)
+                             ->where('end_date', '>=', $current_date)
+                             ->first();
 
             if (!$season) {
-                return response()->json(['error' => 'Season not found'], 404);
-            } else {
-                return response()->json($season, 200);
+                return response()->json(['error' => 'Season not found for the current date'], 404);
             }
 
+            return response()->json($season, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Season not found', 'message' => $e->getMessage()], 404);
+            return response()->json([
+                'error' => 'An error occurred while fetching the current season',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function index(Request $request)
     {
-        try{
+        try {
             $seasons = MSeason::all();
 
             if ($seasons->isEmpty()) {
-                return response()->json(['error' => 'Seasons not found'], 404);
-            } else {
-                return response()->json($seasons, 200);
+                return response()->json(['error' => 'No seasons found in the database'], 404);
             }
 
+            return response()->json($seasons, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Seasons not found', 'message' => $e->getMessage()], 404);
+            return response()->json([
+                'error' => 'An error occurred while fetching the seasons',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function show(Request $request, $id)
     {
-        try{
+        try {
             $season = MSeason::find($id);
 
             if (!$season) {
-                return response()->json(['error' => 'Season not found'], 404);
-            } else {
-                return response()->json($season, 200);
+                return response()->json(['error' => "Season with ID $id not found"], 404);
             }
 
+            return response()->json($season, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Season not found', 'message' => $e->getMessage()], 404);
+            return response()->json([
+                'error' => 'An error occurred while fetching the season details',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -63,8 +71,8 @@ class SeasonController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date',
+                'start_date' => 'required|date|before_or_equal:end_date',
+                'end_date' => 'required|date|after_or_equal:start_date',
             ]);
 
             if ($validator->fails()) {
@@ -72,19 +80,21 @@ class SeasonController extends Controller
             }
 
             if (MSeason::where('name', $request->name)->exists()) {
-                return response()->json(['error' => 'Season already exists'], 409);
-            } else{
-                $season = MSeason::create([
-                    'name' => $request->name,
-                    'start_date' => $request->start_date,
-                    'end_date' => $request->end_date,
-                ]);
-
-                return response()->json($season, 201);
+                return response()->json(['error' => 'A season with this name already exists'], 409);
             }
 
+            $season = MSeason::create([
+                'name' => $request->name,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
+
+            return response()->json($season, 201);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Season creation failed', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An error occurred while creating the season',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -93,29 +103,32 @@ class SeasonController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date',
+                'start_date' => 'required|date|before_or_equal:end_date',
+                'end_date' => 'required|date|after_or_equal:start_date',
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
-            } else {
-                $season = MSeason::find($id);
-
-                if (!$season) {
-                    return response()->json(['error' => 'Season not found'], 404);
-                } else {
-                    $season->name = $request->name;
-                    $season->start_date = $request->start_date;
-                    $season->end_date = $request->end_date;
-                    $season->save();
-                }
-
             }
+
+            $season = MSeason::find($id);
+
+            if (!$season) {
+                return response()->json(['error' => "Season with ID $id not found"], 404);
+            }
+
+            $season->update([
+                'name' => $request->name,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
 
             return response()->json($season, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Season update failed', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An error occurred while updating the season',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -125,15 +138,17 @@ class SeasonController extends Controller
             $season = MSeason::find($id);
 
             if (!$season) {
-                return response()->json(['error' => 'Season not found'], 404);
-            } else {
-                $season->delete();
-
-                return response()->json(['message' => 'Season deleted'], 200);
+                return response()->json(['error' => "Season with ID $id not found"], 404);
             }
+
+            $season->delete();
+
+            return response()->json(['message' => 'Season deleted successfully'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Season deletion failed', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An error occurred while deleting the season',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
-    
 }
