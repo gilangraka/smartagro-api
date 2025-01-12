@@ -13,16 +13,24 @@ class PlantRecomendation extends Controller
     public function index(Request $request)
     {
         try {
-            $plant_recommendations = PlantRecommendation::all();
+            $params = $request->validate([
+                'per_page' => 'nullable|integer|min:1',
+                'order_direction' => 'nullable|in:asc,desc',
+            ]);
+
+            $perPage = $params['per_page'] ?? 10;
+            $orderDirection = $params['order_direction'] ?? 'desc';
+
+            $plant_recommendations = PlantRecommendation::orderBy('created_at', $orderDirection)
+                ->paginate($perPage);
 
             if ($plant_recommendations->isEmpty()) {
                 return response()->json(['error' => 'Plant recommendations not found'], 404);
-            } else {
-                return response()->json($plant_recommendations);
             }
 
+            return response()->json($plant_recommendations, 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Plant recommendations not found', 'message' => $e->getMessage()], 404);
+            return response()->json(['error' => 'Failed to fetch plant recommendations', 'message' => $e->getMessage()], 500);
         }
     }
 

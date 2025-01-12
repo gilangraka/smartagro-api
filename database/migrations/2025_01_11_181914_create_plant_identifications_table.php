@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('history_diseases', function (Blueprint $table) {
+        Schema::create('plant_identifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
             $table->string('image');
+            $table->string('plant_name');
+            $table->decimal('probability', 8, 2)->nullable();
+            $table->string('similar_images')->nullable();
             $table->decimal('lat', 10, 8)->nullable();
             $table->decimal('long', 11, 8)->nullable();
-            $table->string('disease');
-            $table->boolean('is_redundant')->default(false);
-            $table->decimal('probability', 8, 2)->nullable();
-            $table->text('similar_images')->nullable();
-            $table->foreignId('treatment_id')->constrained('treatments');
             $table->timestamps();
         });
     }
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('history_diseases');
+        Schema::dropIfExists('plant_identifications');
     }
 };

@@ -18,6 +18,7 @@ use App\Http\Controllers\DiscussesController;
 use App\Http\Controllers\PlantDisease\Guest\PlantDisease;
 use App\Http\Controllers\PlantDisease\User\AddHistoryController;
 use App\Http\Controllers\DiscussesCommentController;
+use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -60,10 +61,20 @@ Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
 
-Route::group(['prefix' => 'plant-disease'], function ($route) {
-    $route->post('guest', PlantDisease::class);
-    $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
+Route::group(['prefix' => 'plant'], function ($route) {
+    Route::group(['prefix' => 'disease'], function ($route) {
+        $route->get('guest', PlantDisease::class);
+        $route->get('user', AddHistoryController::class)->middleware('auth:sanctum');
+    });
+    
+    Route::group(['prefix' => 'identification'], function () {
+        Route::post('guest', IdentificationController::class); 
+    });
+
+    
 });
+
+
 
 Route::any('{any}', function () {
     $controller = new BaseController();

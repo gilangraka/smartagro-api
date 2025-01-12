@@ -99,7 +99,7 @@ class PlantDisease extends BaseController
             ];
 
             $historyDisease = [
-                'imageUrl' => $image_url,
+                'image' => $image_url,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'disease' => $disease,
