@@ -64,8 +64,8 @@ Route::post('post/comment', [PostController::class, 'comment'])->middleware('aut
 
 Route::group(['prefix' => 'plant'], function ($route) {
     Route::group(['prefix' => 'disease'], function ($route) {
-        $route->get('guest', PlantDisease::class);
-        $route->get('user', AddHistoryController::class)->middleware('auth:sanctum');
+        $route->post('guest', PlantDisease::class);
+        $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
     });
     
     Route::group(['prefix' => 'identification'], function () {

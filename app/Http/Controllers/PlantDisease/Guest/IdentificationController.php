@@ -37,7 +37,7 @@ class IdentificationController extends BaseController
                     'Api-Key' => env('PLANT_ID_API_KEY'),
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
-                )->post('https://plant.id/api/v3/identification', [
+                )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'similar_images' => 'true'
