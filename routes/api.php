@@ -69,6 +69,7 @@ Route::group(['prefix' => 'plant'], function ($route) {
     
     Route::group(['prefix' => 'identification'], function () {
         Route::post('guest', IdentificationController::class); 
+        Route::apiResource('user', IdentificationController::class)->middleware('auth:sanctum');
     });
 
     

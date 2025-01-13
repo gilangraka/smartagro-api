@@ -17,23 +17,48 @@ class IdentificationUserController extends BaseController
     public function index(Request $request)
     {
         try {
-            $params = $request->validate([
-                'q' => 'nullable|string',
-                'per_page' => 'nullable|integer|min:1',
-                'order_direction' => 'nullable|in:asc,desc',
-            ]);
-
-            $search = $params['q'] ?? null;
-            $perPage = $params['per_page'] ?? 10;
-            $orderDirection = $params['order_direction'] ?? 'desc';
-
-            $plant_identifications = PlantIdentification::when($search, function ($query, $search) {
-                    return $query->where('plant_name', 'like', "%$search%");
-                })
-                ->orderBy('created_at', $orderDirection)
-                ->paginate($perPage);
-
-            return response()->json($plant_identifications, 200);
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Unauthorized. Please login first.'], 401);
+            }
+            elseif(Auth::user()->role == 'user'){
+                $params = $request->validate([
+                    'q' => 'nullable|string',
+                    'per_page' => 'nullable|integer|min:1',
+                    'order_direction' => 'nullable|in:asc,desc',
+                ]);
+        
+                $search = $params['q'] ?? null;
+                $perPage = $params['per_page'] ?? 10;
+                $orderDirection = $params['order_direction'] ?? 'desc';
+        
+                $plant_identifications = PlantIdentification::where('user_id', Auth::id())
+                    ->when($search, function ($query, $search) {
+                        return $query->where('plant_name', 'like', "%$search%");
+                    })
+                    ->orderBy('created_at', $orderDirection)
+                    ->paginate($perPage);
+        
+                return response()->json($plant_identifications, 200);
+            } 
+            else{
+                $params = $request->validate([
+                    'q' => 'nullable|string',
+                    'per_page' => 'nullable|integer|min:1',
+                    'order_direction' => 'nullable|in:asc,desc',
+                ]);
+    
+                $search = $params['q'] ?? null;
+                $perPage = $params['per_page'] ?? 10;
+                $orderDirection = $params['order_direction'] ?? 'desc';
+    
+                $plant_identifications = PlantIdentification::when($search, function ($query, $search) {
+                        return $query->where('plant_name', 'like', "%$search%");
+                    })
+                    ->orderBy('created_at', $orderDirection)
+                    ->paginate($perPage);
+    
+                return response()->json($plant_identifications, 200);
+            }
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch plant identifications', 'message' => $e->getMessage()], 500);
         }
@@ -42,6 +67,9 @@ class IdentificationUserController extends BaseController
     public function show(Request $request, $id)
     {
         try {
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Unauthorized. Please login first.'], 401);
+            }
             $plant_identification = PlantIdentification::find($id);
 
             if (!$plant_identification) {
@@ -56,6 +84,9 @@ class IdentificationUserController extends BaseController
 
     public function store(Request $request){
         try {
+            if(Auth::user()->role != 'user'){
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
                 'latitude' => 'required|numeric',
@@ -124,6 +155,9 @@ class IdentificationUserController extends BaseController
     public function destroy(Request $request, $id)
     {
         try {
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Unauthorized. Please login first.'], 401);
+            }
             $plant_identification = PlantIdentification::find($id);
 
             if (!$plant_identification) {
