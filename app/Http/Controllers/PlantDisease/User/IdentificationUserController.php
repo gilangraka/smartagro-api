@@ -76,16 +76,19 @@ class IdentificationUserController extends BaseController
                 return response()->json(['error' => "Plant identification with ID $id not found"], 404);
             }
 
-            return response()->json($plant_identification, 200);
+            return $this->sendResponse($plant_identification, 'Plant identification fetched successfully');
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Plant identification not found', 'message' => $e->getMessage()], 404);
-        }
+            return $this->sendError('Failed to fetch plant identification', 500);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->sendError('Validation Error', 422);
+        } 
+
     }
 
     public function store(Request $request){
         try {
-            if(Auth::user()->role != 'user'){
-                return response()->json(['error' => 'Unauthorized'], 401);
+            if (!Auth::check()) {
+                return response()->json(['error' => 'Unauthorized. Please login first.'], 401);
             }
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
@@ -134,7 +137,7 @@ class IdentificationUserController extends BaseController
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'probability' => $probability,
-                'name' => $name,
+                'plant_name' => $name,
                 'similar_images' => $similar_image,
             ]);
 

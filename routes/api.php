@@ -19,6 +19,7 @@ use App\Http\Controllers\PlantDisease\Guest\PlantDisease;
 use App\Http\Controllers\PlantDisease\User\AddHistoryController;
 use App\Http\Controllers\DiscussesCommentController;
 use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
+use App\Http\Controllers\PlantDisease\User\IdentificationUserController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -69,7 +70,7 @@ Route::group(['prefix' => 'plant'], function ($route) {
     
     Route::group(['prefix' => 'identification'], function () {
         Route::post('guest', IdentificationController::class); 
-        Route::apiResource('user', IdentificationController::class)->middleware('auth:sanctum');
+        Route::apiResource('user', IdentificationUserController::class)->middleware('auth:sanctum');
     });
 
     
