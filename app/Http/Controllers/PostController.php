@@ -25,7 +25,7 @@ class PostController extends BaseController
 
             $data = Post::with(['user:id,name'])
                 ->withCount('postComments')
-                ->select(['id', 'title', 'slug', 'imageUrl'])
+                ->select(['id', 'user_id', 'title', 'slug', 'imageUrl'])
                 ->when(
                     !is_null($search),
                     fn($q) => $q->where('name', 'like', "%$search%")
