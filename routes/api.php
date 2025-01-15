@@ -20,6 +20,7 @@ use App\Http\Controllers\PlantDisease\User\AddHistoryController;
 use App\Http\Controllers\DiscussesCommentController;
 use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
 use App\Http\Controllers\PlantDisease\User\IdentificationUserController;
+use App\Http\Controllers\Auth\ProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -36,6 +37,7 @@ Route::group(['prefix' => 'auth'], function ($route) {
     $route->post('register', RegisterController::class);
     $route->post('login', LoginController::class);
     $route->post('logout', LogoutController::class)->middleware('auth:sanctum');
+    $route->get('profile', [ProfileController::class, 'index'])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'master'], function ($route) {
