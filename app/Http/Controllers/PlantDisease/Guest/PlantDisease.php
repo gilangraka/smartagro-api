@@ -4,13 +4,10 @@ namespace App\Http\Controllers\PlantDisease\Guest;
 
 use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Treatment;
-use App\Models\HistoryDisease;
 
 class PlantDisease extends BaseController
 {
@@ -19,34 +16,51 @@ class PlantDisease extends BaseController
      */
     public function __invoke(Request $request)
     {
+        $filePath = null;
         try {
             $validatedData = $request->validate([
-                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120',
+                'maps_url' => 'required|string',
             ]);
 
-            // Konversi latitude dan longitude menjadi angka float
-            $latitude = (float) $validatedData['latitude'];
-            $longitude = (float) $validatedData['longitude'];
+            $mapsUrl = $validatedData['maps_url'];
 
+            // Expand Google Maps URL
+            $response = Http::get($mapsUrl);
+            if ($response->failed()) {
+                throw new \Exception('Failed to expand the Google Maps URL.');
+            }
+
+            $expandedUrl = $response->effectiveUri();
+            Log::info('Expanded Google Maps URL', ['expanded_url' => $expandedUrl]);
+
+            $pattern = "/[-+]?\d{1,2}\.\d+,\s*[-+]?\d{1,3}\.\d+/";
+            if (preg_match($pattern, $expandedUrl, $matches)) {
+                Log::info('Coordinates Found', ['coordinates' => $matches[0]]);
+            } else {
+                Log::error('Coordinates Not Found');
+            }
+
+            $latitude = (float) $matches[0][0];
+            $longitude = (float) $matches[0][1];
+            Log::info('Extracted Coordinates', ['latitude' => $latitude, 'longitude' => $longitude]);
+
+            // Store image file
             $file = $request->file('image');
             $filePath = $file->store('plant_diseases', 'public');
             $fileUrl = asset('storage/' . $filePath);
 
+            // Cache response based on coordinates and image
             $cacheKey = md5($file->getRealPath() . $latitude . $longitude);
-
-            // Periksa cache untuk data
             $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $latitude, $longitude) {
                 return Http::withHeaders([
                     'Api-Key' => env('PLANT_ID_API_KEY'),
-                ])->attach(
-                    'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
-                )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                    'similar_images' => 'true'
-                ])->json();
+                ])->attach('images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName())
+                  ->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
+                      'latitude' => $latitude,
+                      'longitude' => $longitude,
+                      'similar_images' => 'true'
+                  ])->json();
             });
 
             Log::info('API Response', ['response' => $responseData]);
@@ -57,20 +71,22 @@ class PlantDisease extends BaseController
                 return $this->sendError('Failed to process response from Plant.ID API', 500);
             }
 
+            // Extract disease information
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
             $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
-
             $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'] ?? [];
             $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
 
+            // Format treatment data
             $treatment_chemical = $treatment['chemical'] ? implode(' ', $treatment['chemical']) : null;
             $treatment_biological = $treatment['biological'] ? implode(' ', $treatment['biological']) : null;
             $treatment_prevention = $treatment['prevention'] ? implode(' ', $treatment['prevention']) : null;
 
             $combinedText = $treatment_chemical . "\n\n" . $treatment_biological . "\n\n" . $treatment_prevention;
 
+            // Get translated treatment info
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
@@ -86,6 +102,7 @@ class PlantDisease extends BaseController
                 return $this->sendError('Failed to get response from Plant.ID API', $conversation->status());
             }
 
+            // Extract and update translated treatment details
             $translatedText = explode("\n\n", $conversation['messages'][1]['content'] ?? '');
             $treatment_chemical = $translatedText[0] ?? null;
             $treatment_biological = $translatedText[1] ?? null;
@@ -98,6 +115,7 @@ class PlantDisease extends BaseController
                 'prevention_treatment' => $treatment_prevention,
             ];
 
+            // Prepare history disease data
             $historyDisease = [
                 'image' => $image_url,
                 'latitude' => $latitude,
@@ -109,14 +127,16 @@ class PlantDisease extends BaseController
                 'is_redundant' => $redundant,
             ];
 
+            // Clean up the uploaded file after processing
             Storage::delete($filePath);
 
+            // Return success response
             return $this->sendResponse($historyDisease, 'Plant disease record created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->sendError('Validation Error', 422);
         } catch (\Exception $e) {
             Log::error('Unexpected Error', ['error' => $e->getMessage()]);
-            if (isset($filePath)) {
+            if ($filePath) {
                 Storage::delete($filePath); 
             }
             return $this->sendError('An unexpected error occurred. Please try again.', 500);
