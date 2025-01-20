@@ -11,9 +11,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use GuzzleHttp\Client;
 
 class IdentificationUserController extends BaseController
 {
+    protected $client;
+    
+    public function __construct()
+    {
+        $this->client = new Client();
+    }
+    
     public function index(Request $request)
     {
         try {
@@ -92,12 +100,28 @@ class IdentificationUserController extends BaseController
             }
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
+                'address' => 'required|string',
             ]);
 
-            $latitude = (float) $validatedData['latitude'];
-            $longitude = (float) $validatedData['longitude'];
+
+            $address = $validatedData['address'];
+
+            $userAgent = $request->header('User-Agent');
+
+        $response = $this->client->get('https://nominatim.openstreetmap.org/search', [
+            'query' => [
+                'q' => $address,
+                'format' => 'json'
+            ],
+            'headers' => [
+                'User-Agent' => $userAgent
+            ]
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+
+            $latitude = $data[0]['lat'];
+            $longitude = $data[0]['lon'];
 
             $file = $request->file('image');
             $filePath = $file->store('plant_diseases', 'public');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Auth\CodeCheckController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\DiscussesCommentController;
 use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
 use App\Http\Controllers\PlantDisease\User\IdentificationUserController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\GetAddress;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -74,10 +76,9 @@ Route::group(['prefix' => 'plant'], function ($route) {
         Route::post('guest', IdentificationController::class); 
         Route::apiResource('user', IdentificationUserController::class)->middleware('auth:sanctum');
     });
-
-    
 });
 
+Route::get('/get-coordinates', [AddressController::class, 'getCoordinates']);
 
 
 Route::any('{any}', function () {

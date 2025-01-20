@@ -8,9 +8,17 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use GuzzleHttp\Client;
 
 class PlantDisease extends BaseController
 {
+    protected $client;
+
+    public function __construct()
+    {
+        $this->client = new Client();
+    }
+    
     /**
      * Handle the incoming request.
      */
@@ -20,29 +28,27 @@ class PlantDisease extends BaseController
         try {
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120',
-                'maps_url' => 'required|string',
+                'address' => 'required|string',
             ]);
 
-            $mapsUrl = $validatedData['maps_url'];
+            $address = $validatedData['address'];
 
-            // Expand Google Maps URL
-            $response = Http::get($mapsUrl);
-            if ($response->failed()) {
-                throw new \Exception('Failed to expand the Google Maps URL.');
-            }
+            $userAgent = $request->header('User-Agent');
 
-            $expandedUrl = $response->effectiveUri();
-            Log::info('Expanded Google Maps URL', ['expanded_url' => $expandedUrl]);
+        $response = $this->client->get('https://nominatim.openstreetmap.org/search', [
+            'query' => [
+                'q' => $address,
+                'format' => 'json'
+            ],
+            'headers' => [
+                'User-Agent' => $userAgent
+            ]
+        ]);
 
-            $pattern = "/[-+]?\d{1,2}\.\d+,\s*[-+]?\d{1,3}\.\d+/";
-            if (preg_match($pattern, $expandedUrl, $matches)) {
-                Log::info('Coordinates Found', ['coordinates' => $matches[0]]);
-            } else {
-                Log::error('Coordinates Not Found');
-            }
+        $data = json_decode($response->getBody(), true);
 
-            $latitude = (float) $matches[0][0];
-            $longitude = (float) $matches[0][1];
+            $latitude = $data[0]['lat'];
+            $longitude = $data[0]['lon'];
             Log::info('Extracted Coordinates', ['latitude' => $latitude, 'longitude' => $longitude]);
 
             // Store image file

@@ -10,10 +10,18 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Treatment;
 use App\Models\HistoryDisease;
+use GuzzleHttp\Client;
 
 
 class AddHistoryController extends BaseController
 {
+    protected $client;
+
+    public function __construct()
+    {
+        $this->client = new Client();
+    }
+
     /**
      * Handle the incoming request.
      */
@@ -23,13 +31,27 @@ class AddHistoryController extends BaseController
             // Validate incoming data
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
-                'latitude' => 'required|numeric',
-                'longitude' => 'required|numeric',
+                'address' => 'required|string',
             ]);
 
-            // Extract latitude and longitude as float
-            $latitude = (float) $validatedData['latitude'];
-            $longitude = (float) $validatedData['longitude'];
+            $address = $validatedData['address'];
+
+            $userAgent = $request->header('User-Agent');
+
+        $response = $this->client->get('https://nominatim.openstreetmap.org/search', [
+            'query' => [
+                'q' => $address,
+                'format' => 'json'
+            ],
+            'headers' => [
+                'User-Agent' => $userAgent
+            ]
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+
+            $latitude = $data[0]['lat'];
+            $longitude = $data[0]['lon'];
 
             // Upload the image
             $file = $request->file('image');
