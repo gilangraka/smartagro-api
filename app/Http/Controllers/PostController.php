@@ -38,7 +38,7 @@ class PostController extends BaseController
         }
     }
 
-    public function show($id)
+    public function show($slug)
     {
         try {
             $data = Post::with([
@@ -47,7 +47,7 @@ class PostController extends BaseController
                 'postComments:id,comment,user_id,updated_at',
                 'postComments.user:id,name'
             ])
-                ->find($id);
+                ->where('slug', $slug)->first();
             if (!$data) return $this->sendError('Post not found!');
 
             $data->count += 1;
