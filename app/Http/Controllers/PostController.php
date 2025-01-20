@@ -44,8 +44,6 @@ class PostController extends BaseController
             $data = Post::with([
                 'user:id,name',
                 'category:id,name',
-                'postComments:id,comment,user_id,updated_at',
-                'postComments.user:id,name'
             ])
                 ->where('slug', $slug)->first();
             if (!$data) return $this->sendError('Post not found!');
