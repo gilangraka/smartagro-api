@@ -11,20 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('posts', function (Blueprint $table) {
+        Schema::create('discuss_likes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('discuss_id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('category_id');
-            $table->string('title')->unique();
-            $table->string('slug')->unique();
-            $table->longText('content');
-            $table->string('imageUrl');
-            $table->integer('count');
             $table->timestamps();
-            $table->softDeletes();
 
+            $table->foreign('discuss_id')->references('id')->on('discusses')->cascadeOnDelete();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('category_id')->references('id')->on('m_post_categories')->cascadeOnDelete();
         });
     }
 
@@ -33,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('posts');
+        Schema::dropIfExists('discuss_likes');
     }
 };

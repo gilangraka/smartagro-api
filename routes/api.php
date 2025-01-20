@@ -58,8 +58,6 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
     Route::apiResource('/comments', DiscussesCommentController::class)->except(['show']);
 });
 
-
-
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
 Route::apiResource('post', PostController::class)->except(['index', 'show'])->middleware('auth:sanctum');
 Route::post('post/comment', [PostController::class, 'comment'])->middleware('auth:sanctum');
@@ -69,13 +67,11 @@ Route::group(['prefix' => 'plant'], function ($route) {
         $route->post('guest', PlantDisease::class);
         $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
     });
-    
+
     Route::group(['prefix' => 'identification'], function () {
-        Route::post('guest', IdentificationController::class); 
+        Route::post('guest', IdentificationController::class);
         Route::apiResource('user', IdentificationUserController::class)->middleware('auth:sanctum');
     });
-
-    
 });
 
 

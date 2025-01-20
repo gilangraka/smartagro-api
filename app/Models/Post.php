@@ -16,7 +16,8 @@ class Post extends Model
         'title',
         'slug',
         'content',
-        'imageUrl'
+        'imageUrl',
+        'count'
     ];
 
     public function user()
@@ -26,9 +27,5 @@ class Post extends Model
     public function category()
     {
         return $this->belongsTo(MPostCategory::class, 'category_id');
-    }
-    public function postComments()
-    {
-        return $this->hasMany(PostComment::class, 'post_id');
     }
 }

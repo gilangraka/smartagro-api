@@ -24,8 +24,7 @@ class PostController extends BaseController
             $orderDirection = $params['order_direction'] ?? 'desc';
 
             $data = Post::with(['user:id,name'])
-                ->withCount('postComments')
-                ->select(['id', 'user_id', 'title', 'slug', 'imageUrl'])
+                ->select(['id', 'user_id', 'title', 'slug', 'imageUrl', 'count'])
                 ->when(
                     !is_null($search),
                     fn($q) => $q->where('name', 'like', "%$search%")
@@ -50,6 +49,9 @@ class PostController extends BaseController
             ])
                 ->find($id);
             if (!$data) return $this->sendError('Post not found!');
+
+            $data->count += 1;
+            $data->save();
 
             return $this->sendResponse($data);
         } catch (\Exception $e) {

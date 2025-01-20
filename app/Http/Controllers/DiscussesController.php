@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\discuss;
 use App\Helpers\UploadHelper;
 use App\Models\DiscussComment;
+use App\Models\DiscussLike;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,8 +31,12 @@ class DiscussesController extends BaseController
             $orderBy = $validatedData['order_by'] ?? 'created_at';
             $orderDirection = $validatedData['order_direction'] ?? 'desc';
 
+            $user = $request->user() ?? null;
+
             $data = Discuss::with(['user:id,name'])
                 ->withCount('discussComments')
+                ->withCount('likes')
+                ->when($user, fn($query) => $query->with(['likedByAuthUser' => fn($q) => $q->where('user_id', $user->id)]))
                 ->select(['id', 'title', 'slug', 'imageUrl'])
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
@@ -46,14 +51,14 @@ class DiscussesController extends BaseController
     /**
      * Show details of a specific discussion.
      */
-    public function show($id)
+    public function show($slug)
     {
         try {
             $data = Discuss::with([
                 'user:id,name',
                 'discussComments:id,comment,user_id,updated_at',
                 'discussComments.user:id,name'
-            ])->find($id);
+            ])->where('slug', $slug)->first();
 
             if (!$data) {
                 return $this->sendError('Discussion not found!', 404);
