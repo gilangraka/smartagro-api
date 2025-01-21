@@ -28,7 +28,6 @@ class AddHistoryController extends BaseController
     public function __invoke(Request $request)
     {
         try {
-            // Validate incoming data
             $validatedData = $request->validate([
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', // Max 5 MB
                 'address' => 'required|string',
@@ -47,6 +46,8 @@ class AddHistoryController extends BaseController
                 'User-Agent' => $userAgent
             ]
         ]);
+
+        Log::info('API Response', ['response' => $response->getBody()]);
 
         $data = json_decode($response->getBody(), true);
 
@@ -84,23 +85,19 @@ class AddHistoryController extends BaseController
                 return $this->sendError('Failed to process response from Plant.ID API', 500);
             }
 
-            // Extract disease data
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
             $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
             $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
 
-            // Prepare treatment data
             $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'] ?? [];
             $treatment_chemical = $treatment['chemical'] ? implode(' ', $treatment['chemical']) : null;
             $treatment_biological = $treatment['biological'] ? implode(' ', $treatment['biological']) : null;
             $treatment_prevention = $treatment['prevention'] ? implode(' ', $treatment['prevention']) : null;
 
-            // Combine all treatment information
             $combinedText = $treatment_chemical . "\n\n" . $treatment_biological . "\n\n" . $treatment_prevention;
 
-            // Translate treatment to Indonesian
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
@@ -110,20 +107,17 @@ class AddHistoryController extends BaseController
                 "app_name"=> "AgroLens"
             ]);
 
-            // Handle translation error
             if ($conversation->failed()) {
                 Log::error('Plant.ID API Error', ['status' => $conversation->status()]);
                 Storage::delete($filePath); 
                 return $this->sendError('Failed to get response from Plant.ID API', $conversation->status());
             }
 
-            // Parse translated treatment text
             $translatedText = explode("\n\n", $conversation['messages'][1]['content'] ?? '');
             $treatment_chemical = $translatedText[0] ?? null;
             $treatment_biological = $translatedText[1] ?? null;
             $treatment_prevention = $translatedText[2] ?? null;
 
-            // Store treatment in the database
             $treatmentRecord = Treatment::create([
                 'disease_name' => $disease,
                 'chemical_treatment' => $treatment_chemical,
@@ -131,7 +125,6 @@ class AddHistoryController extends BaseController
                 'prevention_treatment' => $treatment_prevention,
             ]);
 
-            // Store history disease record
             HistoryDisease::create([
                 'image' => $image_url,
                 'user_id' => \Illuminate\Support\Facades\Auth::user()->id,
@@ -155,10 +148,10 @@ class AddHistoryController extends BaseController
                 'is_redundant' => $redundant,
             ];
 
-            Storage::disk('public')->delete($filePath);
+            Storage::delete($filePath);
 
-
-            // Return the stored history disease
+            Log::info('Plant disease record created successfully', ['historyDisease' => $historyDisease]);
+            
             return $this->sendResponse($historyDisease, 'Plant disease record created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->sendError('Validation Error', 422);

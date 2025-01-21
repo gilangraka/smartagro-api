@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Illuminate\Support\Facades\Http;
 
 class RegisterController extends BaseController
 {
@@ -25,14 +26,22 @@ class RegisterController extends BaseController
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', 
+                'bio' => 'string|max:255',
             ]);
 
             Log::info('RegisterController: ' . $validatedData['name'] . ' is trying to register.');
+
+            $image = $request->file('image');
+            $filePath = $image->store('profile_images', 'public');
+            $imageUrl = asset('storage/' . $filePath);
 
             $user = User::create([
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
+                'image' => $imageUrl,
+                'bio' => $validatedData['bio'],
             ]);
 
             $token = $user->createToken('authToken')->plainTextToken;
