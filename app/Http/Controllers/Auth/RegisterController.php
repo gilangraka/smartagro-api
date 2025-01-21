@@ -26,7 +26,7 @@ class RegisterController extends BaseController
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
-                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', 
+                'image' => 'file|mimes:jpeg,jpg,png|max:5120', 
                 'bio' => 'string|max:255',
             ]);
 
