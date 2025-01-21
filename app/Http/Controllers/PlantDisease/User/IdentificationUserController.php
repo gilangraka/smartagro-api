@@ -155,12 +155,11 @@ class IdentificationUserController extends BaseController
             $similar_image = $responseData['result']['classification']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
 
-            // Translate treatment to Indonesian
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
                 "question" => $name . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
-                "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, in a way that's easy for anyone to understand.",
+                "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, focusing on cultivation methods such as planting, watering, sunlight, and soil requirements, in a way that's easy for anyone to understand.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
             ]);
@@ -180,12 +179,12 @@ class IdentificationUserController extends BaseController
             $historyDisease = PlantIdentification::create([
                 'user_id' => Auth::user()->id,
                 'image' => $image_url,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
+                'lat' => $latitude,
+                'long' => $longitude,
                 'probability' => $probability,
                 'plant_name' => $name,
                 'similar_images' => $similar_image,
-                'explanation' => $explanation,
+                'explaination' => $explanation,
             ]);
 
             Storage::delete($filePath);

@@ -135,8 +135,8 @@ class AddHistoryController extends BaseController
             HistoryDisease::create([
                 'image' => $image_url,
                 'user_id' => \Illuminate\Support\Facades\Auth::user()->id,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
+                'lat' => $latitude,
+                'long' => $longitude,
                 'disease' => $disease,
                 'probability' => $probability,
                 'similar_images' => $similar_image, 

@@ -86,7 +86,7 @@ class IdentificationController extends BaseController
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
                 "question" => $name . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
-                "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, in a way that's easy for anyone to understand.",
+                "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, focusing on cultivation methods such as planting, watering, sunlight, and soil requirements, in a way that's easy for anyone to understand.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
             ]);

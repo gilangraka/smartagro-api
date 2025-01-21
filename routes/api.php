@@ -70,7 +70,7 @@ Route::group(['prefix' => 'plant'], function ($route) {
     Route::group(['prefix' => 'disease'], function ($route) {
         $route->post('guest', PlantDisease::class);
         $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
-        Route::apiResource('user', PlantDiseaseUserController::class)->middleware('auth:sanctum');
+        Route::apiResource('user', PlantDiseaseUserController::class)->middleware('auth:sanctum')->only(['index', 'show', 'update', 'destroy']);
     });
     
     Route::group(['prefix' => 'identification'], function () {
