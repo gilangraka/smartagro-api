@@ -9,6 +9,7 @@ use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\PostComment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -23,15 +24,17 @@ class PostController extends BaseController
             $orderBy = $params['order_by'] ?? 'created_at';
             $orderDirection = $params['order_direction'] ?? 'desc';
 
-            $data = Post::with(['user:id,name'])
+            $data = Post::with(['user:id,name', 'category:id,name'])
                 ->withCount('postComments')
-                ->select(['id', 'title', 'slug', 'imageUrl'])
+                ->select(['id', 'title', 'slug', 'imageUrl','user_id', 'category_id'])
                 ->when(
                     !is_null($search),
                     fn($q) => $q->where('name', 'like', "%$search%")
                 )
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
+            $data->getCollection()->each(function ($item) {
+                    $item->makeHidden('user_id', 'category_id');});
 
             return $this->sendResponse($data, '', true);
         } catch (\Exception $e) {
@@ -39,7 +42,7 @@ class PostController extends BaseController
         }
     }
 
-    public function show($id)
+    public function show($slug)
     {
         try {
             $data = Post::with([
@@ -48,7 +51,8 @@ class PostController extends BaseController
                 'postComments:id,comment,user_id,updated_at',
                 'postComments.user:id,name'
             ])
-                ->find($id);
+                ->where('slug', $slug)
+                ->first();
             if (!$data) return $this->sendError('Post not found!');
 
             return $this->sendResponse($data);
@@ -57,17 +61,24 @@ class PostController extends BaseController
         }
     }
 
-    public function store(StorePostRequest $request)
+    public function store(Request $request)
     {
         try {
-            $params = $request->validated();
+            $params = $request->validate([
+                'category_id' => ['required', 'exists:m_post_categories,id'],
+                'title' => ['required', 'unique:posts,title'],
+                'content' => ['required'],
+                'imageUrl' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            ]);
             $params['user_id'] = Auth::id();
 
             $slug = Str::slug($params['title']);
             $count = Post::where('slug', $slug)->count();
             if ($count > 0) {
                 $slug .= '-' . ($count + 1);
+                return $this->sendError('Post already exists!', 400);
             }
+
             $params['slug'] = $slug;
 
             $file = $request->file('imageUrl');
