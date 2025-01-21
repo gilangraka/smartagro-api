@@ -26,7 +26,7 @@ class RegisterController extends BaseController
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
-                'avatar' => 'nullable|file|mimes:jpeg,jpg,png|max:5120', 
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', 
                 'bio' => 'nullable|string|max:255',
             ]);
 
@@ -35,8 +35,8 @@ class RegisterController extends BaseController
             Log::info('RegisterController: ' . $validatedData['name'] . ' is trying to register.');
 
             $imageUrl = null;
-            if ($request->hasFile('avatar')) {
-                $image = $request->file('avatar');
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
                 $filePath = $image->store('profile_images', 'public');
                 $imageUrl = asset('storage/' . $filePath);
             }
@@ -45,8 +45,8 @@ class RegisterController extends BaseController
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
-                'avatar' => $imageUrl,
-                'bio' => $bio,
+                'image' => $imageUrl,
+                'bio' => $validatedData['bio'] ?? null,
             ]);
 
             $token = $user->createToken('authToken')->plainTextToken;
