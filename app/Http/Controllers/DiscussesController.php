@@ -30,12 +30,20 @@ class DiscussesController extends BaseController
             $orderBy = $validatedData['order_by'] ?? 'created_at';
             $orderDirection = $validatedData['order_direction'] ?? 'desc';
 
-            $data = Discuss::with(['user:id,name'])
-                ->withCount('discussComments')
-                ->select(['id', 'title', 'slug', 'imageUrl'])
+            $data = Discuss::with(['user:id,name', 'discussComments' => function ($query) {
+                    $query->selectRaw('count(*) as count, discus_id')
+                    ->groupBy('discus_id');}])
+                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id'])
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
+
+            $data->getCollection()->each(function ($item) {
+                    $item->makeHidden('user_id');
+                    $item->discussComments->each(function ($comment) {
+                        $comment->makeHidden('discus_id');
+                    });
+                });
 
             return $this->sendResponse($data, 'Discussions fetched successfully.');
         } catch (\Exception $e) {
