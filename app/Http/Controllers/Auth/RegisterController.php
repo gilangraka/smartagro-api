@@ -41,7 +41,7 @@ class RegisterController extends BaseController
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
                 'image' => $imageUrl,
-                'bio' => $validatedData['bio'],
+                'bio' => $validatedData['bio'] ?? null,
             ]);
 
             $token = $user->createToken('authToken')->plainTextToken;
