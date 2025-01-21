@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-class ProfileController extends Controller
+class ProfileController extends BaseController
 {
     public function index(Request $request)
     {
         try {
             $user = $request->user();
-            return response()->json($user, 200);
+            return $this->sendResponse($user, 'Profile retrieved successfully');
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to fetch user profile', 'message' => $e->getMessage()], 500);
+            return $this->sendError($e->getMessage(), 500);
         }
     }
 
@@ -53,22 +53,14 @@ class ProfileController extends Controller
 
             $user->save();
 
-            return response()->json([
-                'message' => 'Profile updated successfully',
-                'user' => $user,
-            ], 200);
+            return $this->sendResponse($user, 'Profile updated successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $e->errors(),
-            ], 422);
+            return $this->sendError($e->errors(), 400);
 
         } catch (\Exception $e) {
             Log::error("Profile update error: " . $e->getMessage());
-            return response()->json([
-                'message' => 'An error occurred while updating the profile',
-            ], 500);
+            return $this->sendError($e->getMessage(), 500);
         }
     }
 }
