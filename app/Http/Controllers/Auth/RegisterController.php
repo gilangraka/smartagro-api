@@ -51,8 +51,6 @@ class RegisterController extends BaseController
 
             $token = $user->createToken('authToken')->plainTextToken;
 
-            
-
             return $this->sendResponse(['user' => $user, 'token' => $token], 'User registered successfully.');
         } catch (BadRequestHttpException $e) {
             Log::error('RegisterController: ' . $e->getMessage());
