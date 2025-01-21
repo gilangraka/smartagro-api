@@ -27,7 +27,7 @@ class RegisterController extends BaseController
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
                 'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', 
-                'bio' => 'string|max:255',
+                'bio' => 'nullable|string|max:255',
             ]);
 
             Log::info('RegisterController: ' . $validatedData['name'] . ' is trying to register.');
