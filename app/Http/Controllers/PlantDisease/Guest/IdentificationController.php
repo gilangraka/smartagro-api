@@ -60,7 +60,7 @@ class IdentificationController extends BaseController
                     'Api-Key' => env('PLANT_ID_API_KEY'),
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
-                )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
+                )->post('https://plant.id/api/v3/identification', [
                     'latitude' => $latitude,
                     'longitude' => $longitude,
                     'similar_images' => 'true'
@@ -91,6 +91,7 @@ class IdentificationController extends BaseController
             ];
 
             Storage::delete($filePath);
+            Log::info('Plant disease record created successfully', ['data' => $historyDisease]);
 
             return $this->sendResponse($historyDisease, 'Plant disease record created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
