@@ -81,6 +81,27 @@ class IdentificationController extends BaseController
             $similar_image = $responseData['result']['classification']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
 
+            // Translate treatment to Indonesian
+            $conversation = Http::withHeaders([
+                'Api-Key' => env('PLANT_ID_API_KEY'),
+            ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
+                "question" => $name . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
+                "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, in a way that's easy for anyone to understand.",
+                "temperature"=> 0.5,
+                "app_name"=> "AgroLens"
+            ]);
+
+            // Handle translation error
+            if ($conversation->failed()) {
+                Log::error('Plant.ID API Error', ['status' => $conversation->status()]);
+                Storage::delete($filePath); 
+                return $this->sendError('Failed to get response from Plant.ID API', $conversation->status());
+            }
+
+            // Parse translated treatment text
+            $translatedText = explode("\n\n", $conversation['messages'][1]['content'] ?? '');
+            $explanation = $translatedText[0] ?? null;
+
             $historyDisease = [
                 'image' => $image_url,
                 'latitude' => $latitude,
@@ -88,6 +109,7 @@ class IdentificationController extends BaseController
                 'probability' => $probability,
                 'name' => $name,
                 'similar_images' => $similar_image,
+                'explanation' => $explanation,
             ];
 
             Storage::delete($filePath);

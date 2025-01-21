@@ -104,7 +104,7 @@ class AddHistoryController extends BaseController
             $conversation = Http::withHeaders([
                 'Api-Key' => env('PLANT_ID_API_KEY'),
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
-                "question" => $combinedText . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
+                "question" => $combinedText . "Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
                 "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
                 "temperature"=> 0.5,
                 "app_name"=> "AgroLens"
@@ -151,7 +151,7 @@ class AddHistoryController extends BaseController
                 'disease' => $disease,
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
-                'treatment_id' => $treatment,
+                'treatment_id' => $treatmentRecord,
                 'is_redundant' => $redundant,
             ];
 

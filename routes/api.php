@@ -22,7 +22,7 @@ use App\Http\Controllers\DiscussesCommentController;
 use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
 use App\Http\Controllers\PlantDisease\User\IdentificationUserController;
 use App\Http\Controllers\Auth\ProfileController;
-use App\Http\Controllers\GetAddress;
+use App\Http\Controllers\PlantDisease\User\PlantDiseaseUserController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -70,6 +70,7 @@ Route::group(['prefix' => 'plant'], function ($route) {
     Route::group(['prefix' => 'disease'], function ($route) {
         $route->post('guest', PlantDisease::class);
         $route->post('user', AddHistoryController::class)->middleware('auth:sanctum');
+        Route::apiResource('user', PlantDiseaseUserController::class)->middleware('auth:sanctum');
     });
     
     Route::group(['prefix' => 'identification'], function () {
@@ -78,7 +79,6 @@ Route::group(['prefix' => 'plant'], function ($route) {
     });
 });
 
-Route::get('/get-coordinates', [AddressController::class, 'getCoordinates']);
 
 
 Route::any('{any}', function () {

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('similar_images')->nullable();
             $table->decimal('lat', 10, 8)->nullable();
             $table->decimal('long', 11, 8)->nullable();
+            $table->text('explaination')->nullable();
             $table->timestamps();
         });
     }
