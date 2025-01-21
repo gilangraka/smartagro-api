@@ -89,6 +89,13 @@ class PostController extends BaseController
             $data = new Post($params);
             $data->save();
 
+            $data = Post::with(['user:id,name', 'category:id,name'])
+                ->withCount('postComments')
+                ->select(['id', 'title', 'slug', 'imageUrl','user_id', 'category_id'])
+                ->find($data->id);
+            
+            $data->makeHidden(['user_id', 'category_id']);
+
             return $this->sendResponse($data);
         } catch (\Exception $e) {
             return $this->sendError($e->getMessage(), 500);
