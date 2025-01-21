@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\CodeCheckController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -23,10 +24,24 @@ use App\Http\Controllers\PlantDisease\Guest\IdentificationController;
 use App\Http\Controllers\PlantDisease\User\IdentificationUserController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PlantDisease\User\PlantDiseaseUserController;
+use App\Http\Controllers\Admin\PlantController;
+use App\Http\Controllers\Admin\PlantIdentificationController;
+use App\Http\Controllers\Admin\PostCountController;
+use App\Http\Controllers\Admin\DiscussCountController;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::prefix('admin')->group(function ($route) {
+    Route::apiResource('user',UserController::class)->middleware('auth:sanctum');
+    Route::get('/plant-disease', [PlantController::class, 'plant_disease']);
+    Route::get('/plant-identification', PlantIdentificationController::class);
+    Route::get('/post', PostCountController::class);
+    Route::get('/discuss', DiscussCountController::class);
+});
+
 
 Route::group(['prefix' => 'auth'], function ($route) {
     $route->get('google', [SocialiteController::class, 'redirectToProvider']);
@@ -59,7 +74,6 @@ Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
     Route::apiResource('/', DiscussesController::class)->parameters(['' => 'id']);
     Route::apiResource('/comments', DiscussesCommentController::class)->except(['show']);
 });
-
 
 
 Route::apiResource('post', PostController::class)->only(['index', 'show']);
