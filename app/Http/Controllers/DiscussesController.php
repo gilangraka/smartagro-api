@@ -78,6 +78,11 @@ class DiscussesController extends BaseController
             ]);
 
             $validatedData['user_id'] = Auth::id();
+
+            if(!$validatedData['user_id']){
+                return $this->sendError('Unauthorized. Please login first.', 401);
+            }
+            
             $validatedData['slug'] = $this->generateSlug($validatedData['title']);
 
             if ($request->hasFile('imageUrl')) {

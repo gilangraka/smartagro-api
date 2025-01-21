@@ -25,6 +25,7 @@ class DiscussesCommentController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->paginate(5);
 
+
             if ($data->isEmpty()) {
                 return $this->sendResponse([], 'No comments found for the given discussion.');
             }
@@ -54,6 +55,14 @@ class DiscussesCommentController extends BaseController
             ]);
 
             $validatedData['user_id'] = Auth::id();
+
+            if (!is_numeric($validatedData['discus_id'])) {
+                return $this->sendError('Invalid discuss ID.', 400);
+            }
+
+            if (!$validatedData['user_id']) {
+                return $this->sendError('Unauthorized. Please login first.', 401);
+            }
 
             $data = DiscussComment::create($validatedData);
 
