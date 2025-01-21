@@ -155,8 +155,8 @@ class AddHistoryController extends BaseController
                 'is_redundant' => $redundant,
             ];
 
-            // Delete uploaded file after processing
-            Storage::delete($filePath);
+            Storage::disk('public')->delete($filePath);
+
 
             // Return the stored history disease
             return $this->sendResponse($historyDisease, 'Plant disease record created successfully');
