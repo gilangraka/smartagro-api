@@ -73,6 +73,35 @@ class DiscussesController extends BaseController
         }
     }
 
+
+    public function getDiscussByUserId($userId, Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'per_page' => 'nullable|integer',
+                'order_by' => 'nullable|string',
+                'order_direction' => 'nullable|in:asc,desc',
+            ]);
+
+            $perPage = $validatedData['per_page'] ?? 10;
+            $orderBy = $validatedData['order_by'] ?? 'created_at';
+            $orderDirection = $validatedData['order_direction'] ?? 'desc';
+
+            $data = Discuss::with(['user:id,name', 'discussComments'])
+                ->where('user_id', $userId)
+                ->orderBy($orderBy, $orderDirection)
+                ->paginate($perPage);
+
+            if ($data->isEmpty()) {
+                return $this->sendError('No discussions found for the given user ID.', 404);
+            }
+
+            return $this->sendResponse($data, 'Discussions fetched successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Error fetching discussions: ' . $e->getMessage(), 500);
+        }
+    }
+
     /**
      * Store a new discussion.
      */

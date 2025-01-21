@@ -71,6 +71,7 @@ Route::group(['prefix' => 'master'], function ($route) {
 });
 
 Route::middleware('auth:sanctum')->prefix('discusses')->group(function () {
+    Route::get('/user/{userId}', [DiscussesController::class, 'getDiscussByUserId']);
     Route::apiResource('/', DiscussesController::class)->parameters(['' => 'id']);
     Route::apiResource('/comments', DiscussesCommentController::class)->except(['show']);
 });
