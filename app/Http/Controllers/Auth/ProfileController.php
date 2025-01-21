@@ -42,9 +42,10 @@ class ProfileController extends Controller
                     if ($user->image) {
                         Storage::delete($user->image);
                     }
-                $image = $request->file('image');
-                $filePath = $image->store('profile_images', 'public');
-                $imageUrl = asset('storage/' . $filePath);
+                    $image = $request->file('image');
+                    $filename = 'profile_' . preg_replace('/\s+/', '_', strtolower($user->email)) . '.' . $image->getClientOriginalExtension();
+                    $filePath = $image->storeAs('profile_images', $filename, 'public');
+                    $imageUrl = asset('storage/' . $filePath);
                 }
             }
 

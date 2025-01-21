@@ -37,7 +37,8 @@ class RegisterController extends BaseController
             $imageUrl = null;
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $filePath = $image->store('profile_images', 'public');
+                $filename = 'profile_' . preg_replace('/\s+/', '_', strtolower($validatedData['email'])) . '.' . $image->getClientOriginalExtension();
+                $filePath = $image->storeAs('profile_images', $filename, 'public');
                 $imageUrl = asset('storage/' . $filePath);
             }
 
