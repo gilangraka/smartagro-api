@@ -55,8 +55,6 @@ Route::group(['prefix' => 'auth'], function ($route) {
     $route->post('login', LoginController::class);
     $route->post('logout', LogoutController::class)->middleware('auth:sanctum');
     $route->get('profile', [ProfileController::class, 'index'])->middleware('auth:sanctum');
-
-    $route->put('/profile', [UpdateProfileController::class, 'updateProfile'])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'master'], function ($route) {
