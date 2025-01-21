@@ -28,7 +28,7 @@ use App\Http\Controllers\Admin\PlantController;
 use App\Http\Controllers\Admin\PlantIdentificationController;
 use App\Http\Controllers\Admin\PostCountController;
 use App\Http\Controllers\Admin\DiscussCountController;
-
+use App\Http\Controllers\Auth\UpdateProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -55,6 +55,8 @@ Route::group(['prefix' => 'auth'], function ($route) {
     $route->post('login', LoginController::class);
     $route->post('logout', LogoutController::class)->middleware('auth:sanctum');
     $route->get('profile', [ProfileController::class, 'index'])->middleware('auth:sanctum');
+
+    $route->put('/profile', [UpdateProfileController::class, 'updateProfile'])->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'master'], function ($route) {
