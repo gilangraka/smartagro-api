@@ -42,4 +42,9 @@ class Discuss extends Model
     {
         return $this->hasOne(DiscussLike::class)->where('user_id', Auth::id());
     }
+
+    public function getImageUrlAttribute($value)
+    {
+        return $value ? "https://smartagro-api.sightway.my.id/storage/discusses/{$value}" : null;
+    }
 }
