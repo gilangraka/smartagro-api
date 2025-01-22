@@ -28,6 +28,12 @@ class PlantDiseaseUserController extends BaseController
                 ->orderBy('created_at', $orderDirection)
                 ->paginate($perPage);
 
+            $treatment_id = $plant_diseases->treatment_id;
+            $treatment = Treatment::where('id', $treatment_id)->get();
+
+            $plant_diseases->treatment = $treatment;
+            unset($plant_disease->treatment_id);
+
             return response()->json($plant_diseases, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch plant diseases', 'message' => $e->getMessage()], 500);

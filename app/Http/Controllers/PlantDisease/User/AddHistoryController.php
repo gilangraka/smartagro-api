@@ -65,7 +65,7 @@ class AddHistoryController extends BaseController
             // Check cache for response
             $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $latitude, $longitude) {
                 return Http::withHeaders([
-                    'Api-Key' => env('PLANT_API_KEY'),
+                    'Api-Key' =>'ebJyUN9jBHhhRxolwKqQwqvPe8Wi3NbRRqvNASOaUYFydfJDgI',
                     Log::info('API Key', ['Api-Key' => env('PLANT_API_KEY')]),
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
@@ -100,7 +100,7 @@ class AddHistoryController extends BaseController
             $combinedText = $treatment_chemical . "\n\n" . $treatment_biological . "\n\n" . $treatment_prevention;
 
             $conversation = Http::withHeaders([
-                'Api-Key' => env('PLANT_ID_API_KEY'),
+                'Api-Key' => 'ebJyUN9jBHhhRxolwKqQwqvPe8Wi3NbRRqvNASOaUYFydfJDgI',
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
                 "question" => $combinedText . "Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
                 "prompt" => "Ensure the translation is precise and avoids unnecessary explanations.",
