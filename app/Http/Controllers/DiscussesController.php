@@ -61,13 +61,10 @@ class DiscussesController extends BaseController
                 return $this->sendError('Discussion not found!', 404);
             }
 
-            $data->comments_count = $data->discussComments->count();
+            $data->count += 1;
+            $data->save();
 
-            $data->makeHidden('user_id');
-            $data->discussComments->each(function ($comment) {
-                $comment->makeHidden('discus_id');
-                $comment->makeHidden('user_id');
-            });
+            $data->comments_count = $data->discussComments->count();
 
             return $this->sendResponse($data, 'Discussion details fetched successfully.');
         } catch (\Exception $e) {
