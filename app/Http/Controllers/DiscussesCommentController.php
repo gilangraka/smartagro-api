@@ -25,6 +25,7 @@ class DiscussesCommentController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->paginate(5);
 
+
             if ($data->isEmpty()) {
                 return $this->sendResponse([], 'No comments found for the given discussion.');
             }
@@ -33,6 +34,35 @@ class DiscussesCommentController extends BaseController
         } catch (\Exception $e) {
             Log::error('Error fetching comments', [
                 'discuss_id' => $discuss_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->sendError('Error fetching comments. Please try again later.', 500);
+        }
+    }
+
+    /**
+     * Get a paginated list of comments by a specific user.
+     */
+    public function getCommentsByUserId($userId)
+    {
+        try {
+            if (!is_numeric($userId)) {
+                return $this->sendError('Invalid user ID.', 400);
+            }
+
+            $data = DiscussComment::where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->paginate(5);
+
+            if ($data->isEmpty()) {
+                return $this->sendResponse([], 'No comments found for the given user.');
+            }
+
+            return $this->sendResponse($data, 'Comments fetched successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error fetching comments by user ID', [
+                'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
 
@@ -54,6 +84,14 @@ class DiscussesCommentController extends BaseController
             ]);
 
             $validatedData['user_id'] = Auth::id();
+
+            if (!is_numeric($validatedData['discus_id'])) {
+                return $this->sendError('Invalid discuss ID.', 400);
+            }
+
+            if (!$validatedData['user_id']) {
+                return $this->sendError('Unauthorized. Please login first.', 401);
+            }
 
             $data = DiscussComment::create($validatedData);
 

@@ -15,7 +15,8 @@ class PlantIdentification extends Model
         'probability',
         'similar_images',
         'lat',
-        'long'
+        'long',
+        'explaination',
     ];
 
     public function user()

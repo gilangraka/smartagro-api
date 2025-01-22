@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PlantDisease\User;
 
 use App\Http\Controllers\BaseController;
 use App\Models\HistoryDisease;
+use App\Models\Treatment;
 use Illuminate\Http\Request;
 
 class PlantDiseaseUserController extends BaseController
@@ -27,6 +28,13 @@ class PlantDiseaseUserController extends BaseController
                 ->orderBy('created_at', $orderDirection)
                 ->paginate($perPage);
 
+            $plant_diseases->getCollection()->transform(function ($plant_disease) {
+                $treatment = Treatment::where('id', $plant_disease->treatment_id)->first(); 
+                $plant_disease->treatment = $treatment; 
+                unset($plant_disease->treatment_id); 
+                return $plant_disease;
+            });
+
             return response()->json($plant_diseases, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to fetch plant diseases', 'message' => $e->getMessage()], 500);
@@ -37,10 +45,15 @@ class PlantDiseaseUserController extends BaseController
     {
         try {
             $plant_disease = HistoryDisease::find($id);
+            $treatment_id = $plant_disease->treatment_id;
+            $treatment = Treatment::where('id', $treatment_id)->get();
 
             if (!$plant_disease) {
                 return response()->json(['error' => "Plant disease with ID $id not found"], 404);
             }
+
+            $plant_disease->treatment = $treatment;
+            unset($plant_disease->treatment_id);
 
             return response()->json($plant_disease, 200);
         } catch (\Exception $e) {
