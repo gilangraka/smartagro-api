@@ -33,7 +33,7 @@ class DiscussesController extends BaseController
             $data = Discuss::with(['user:id,name', 'discussComments' => function ($query) {
                     $query->selectRaw('count(*) as count, discus_id')
                     ->groupBy('discus_id');}])
-                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id'])
+                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id', 'created_at'])
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
@@ -54,14 +54,14 @@ class DiscussesController extends BaseController
     /**
      * Show details of a specific discussion.
      */
-    public function show($id)
+    public function show($slug)
     {
         try {
             $data = Discuss::with([
                 'user:id,name',
                 'discussComments:id,comment,user_id,updated_at',
                 'discussComments.user:id,name'
-            ])->find($id);
+            ])->where('slug',$slug)->first();
 
             if (!$data) {
                 return $this->sendError('Discussion not found!', 404);
