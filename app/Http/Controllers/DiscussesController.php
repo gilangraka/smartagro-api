@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\discuss;
 use App\Helpers\UploadHelper;
 use App\Models\DiscussComment;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,10 +31,10 @@ class DiscussesController extends BaseController
             $orderBy = $validatedData['order_by'] ?? 'created_at';
             $orderDirection = $validatedData['order_direction'] ?? 'desc';
 
-            $data = Discuss::with(['user:id,name', 'discussComments' => function ($query) {
+            $data = Discuss::with(['user:id,name,image,email', 'discussComments' => function ($query) {
                     $query->selectRaw('count(*) as count, discus_id')
                     ->groupBy('discus_id');}])
-                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id'])
+                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id', 'created_at'])
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
@@ -52,26 +53,41 @@ class DiscussesController extends BaseController
     }
 
     /**
-     * Show details of a specific discussion.
+     * Get a single discussion with comments.
      */
     public function show($id)
     {
         try {
             $data = Discuss::with([
-                'user:id,name',
-                'discussComments:id,comment,user_id,updated_at',
-                'discussComments.user:id,name'
-            ])->find($id);
+                'user:id,name,image,email',  
+                'discussComments' => function ($query) use ($id) {
+                    $query->select(['id', 'discus_id', 'user_id', 'comment', 'created_at'])  
+                        ->with(['user:id,name,image,email'])  
+                        ->where('discus_id', $id);  
+                },
+            ])
+            ->select(['id', 'title', 'slug', 'imageUrl', 'content', 'user_id', 'created_at'])  
+            ->find($id);  
 
             if (!$data) {
                 return $this->sendError('Discussion not found!', 404);
             }
+
+            $data->comments_count = $data->discussComments->count();
+
+            $data->makeHidden('user_id');
+            $data->discussComments->each(function ($comment) {
+                $comment->makeHidden('discus_id'); 
+                $comment->makeHidden('user_id');
+            });
 
             return $this->sendResponse($data, 'Discussion details fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Error fetching discussion: ' . $e->getMessage(), 500);
         }
     }
+
+    
 
 
     public function getDiscussByUserId($userId, Request $request)

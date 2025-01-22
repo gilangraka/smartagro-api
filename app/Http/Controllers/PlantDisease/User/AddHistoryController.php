@@ -65,7 +65,8 @@ class AddHistoryController extends BaseController
             // Check cache for response
             $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $latitude, $longitude) {
                 return Http::withHeaders([
-                    'Api-Key' => env('PLANT_ID_API_KEY'),
+                    'Api-Key' => env('PLANT_API_KEY'),
+                    Log::info('API Key', ['Api-Key' => env('PLANT_API_KEY')]),
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
                 )->post('https://plant.id/api/v3/health_assessment?details=local_name,url,treatment,classification,common_names', [
