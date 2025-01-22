@@ -20,8 +20,7 @@ class Discuss extends Model
 
     public function getImageUrlAttribute($value)
     {
-        return "Test 123 $value";
-        // return "https://smartagro-api.sightway.my.id/storage/discusses/{$value}";
+        return "https://smartagro-api.sightway.my.id/storage/discusses/{$value}";
     }
 
     public function getTitleAttribute($value)
