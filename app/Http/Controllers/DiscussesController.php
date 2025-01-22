@@ -55,19 +55,14 @@ class DiscussesController extends BaseController
     /**
      * Get a single discussion with comments.
      */
-    public function show($id)
+    public function show($slug)
     {
         try {
             $data = Discuss::with([
-                'user:id,name,image,email',  
-                'discussComments' => function ($query) use ($id) {
-                    $query->select(['id', 'discus_id', 'user_id', 'comment', 'created_at'])  
-                        ->with(['user:id,name,image,email'])  
-                        ->where('discus_id', $id);  
-                },
-            ])
-            ->select(['id', 'title', 'slug', 'imageUrl', 'content', 'user_id', 'created_at'])  
-            ->find($id);  
+                'user:id,name',
+                'discussComments:id,comment,user_id,updated_at',
+                'discussComments.user:id,name'
+            ])->find($slug);
 
             if (!$data) {
                 return $this->sendError('Discussion not found!', 404);
