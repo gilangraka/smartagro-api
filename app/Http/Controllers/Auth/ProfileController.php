@@ -43,7 +43,7 @@ class ProfileController extends BaseController
                         Storage::delete($user->image);
                     }
                     $image = $request->file('image');
-                    $filename = 'profile_' . preg_replace('/\s+/', '_', strtolower($user->email)) . '.' . $image->getClientOriginalExtension();
+                    $filename = uniqid() . '.' . $image->getClientOriginalExtension();
                     $filePath = $image->storeAs('profile_images', $filename, 'public');
                     $imageUrl = asset('storage/' . $filePath);
                 }
