@@ -10,11 +10,11 @@ class HistoryDisease extends Model
     use HasFactory;
     protected $fillable = [
         'user_id',
-        'imageUrl',
+        'image',
         'lat',
         'long',
         'disease',
-        'is_redundant',
+        // 'is_redundant',
         'probability',
         'similar_images',
         'treatment_id',

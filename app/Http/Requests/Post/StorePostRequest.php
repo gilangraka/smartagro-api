@@ -28,4 +28,6 @@ class StorePostRequest extends FormRequest
             'imageUrl' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240']
         ];
     }
+
+    
 }

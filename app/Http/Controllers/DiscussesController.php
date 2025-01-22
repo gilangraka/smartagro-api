@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\discuss;
 use App\Helpers\UploadHelper;
 use App\Models\DiscussComment;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,12 +31,20 @@ class DiscussesController extends BaseController
             $orderBy = $validatedData['order_by'] ?? 'created_at';
             $orderDirection = $validatedData['order_direction'] ?? 'desc';
 
-            $data = Discuss::with(['user:id,name'])
-                ->withCount('discussComments')
-                ->select(['id', 'title', 'slug', 'imageUrl'])
+            $data = Discuss::with(['user:id,name,image', 'discussComments' => function ($query) {
+                    $query->selectRaw('count(*) as count, discus_id')
+                    ->groupBy('discus_id');}])
+                ->select(['id', 'title', 'slug', 'imageUrl','content','user_id', 'created_at'])
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
+
+            $data->getCollection()->each(function ($item) {
+                    $item->makeHidden('user_id');
+                    $item->discussComments->each(function ($comment) {
+                        $comment->makeHidden('discus_id');
+                    });
+                });
 
             return $this->sendResponse($data, 'Discussions fetched successfully.');
         } catch (\Exception $e) {
@@ -44,24 +53,67 @@ class DiscussesController extends BaseController
     }
 
     /**
-     * Show details of a specific discussion.
+     * Get a single discussion with comments.
      */
-    public function show($id)
+    public function show($slug)
     {
         try {
+            $id = Discuss::where('slug', $slug)->value('id');
             $data = Discuss::with([
-                'user:id,name',
-                'discussComments:id,comment,user_id,updated_at',
-                'discussComments.user:id,name'
-            ])->find($id);
+                'user:id,name,image',  
+                'discussComments' => function ($query) use ($id) {
+                    $query->select(['id', 'discus_id', 'user_id', 'comment', 'created_at'])  
+                        ->with(['user:id,name,image'])  
+                        ->where('discus_id', $id);  
+                },
+            ])
+            ->select(['id', 'title', 'slug', 'imageUrl', 'content', 'user_id', 'created_at'])  
+            ->find($id);  
 
             if (!$data) {
                 return $this->sendError('Discussion not found!', 404);
             }
 
+            $data->comments_count = $data->discussComments->count();
+
+            $data->makeHidden('user_id');
+            $data->discussComments->each(function ($comment) {
+                $comment->makeHidden('discus_id'); 
+                $comment->makeHidden('user_id');
+            });
+
             return $this->sendResponse($data, 'Discussion details fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Error fetching discussion: ' . $e->getMessage(), 500);
+        }
+    }
+
+
+    public function getDiscussByUserId($userId, Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'per_page' => 'nullable|integer',
+                'order_by' => 'nullable|string',
+                'order_direction' => 'nullable|in:asc,desc',
+            ]);
+
+            $perPage = $validatedData['per_page'] ?? 10;
+            $orderBy = $validatedData['order_by'] ?? 'created_at';
+            $orderDirection = $validatedData['order_direction'] ?? 'desc';
+
+            $data = Discuss::with(['user:id,name', 'discussComments'])
+                ->where('user_id', $userId)
+                ->orderBy($orderBy, $orderDirection)
+                ->paginate($perPage);
+
+            if ($data->isEmpty()) {
+                return $this->sendError('No discussions found for the given user ID.', 404);
+            }
+
+            return $this->sendResponse($data, 'Discussions fetched successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Error fetching discussions: ' . $e->getMessage(), 500);
         }
     }
 
@@ -78,6 +130,11 @@ class DiscussesController extends BaseController
             ]);
 
             $validatedData['user_id'] = Auth::id();
+
+            if(!$validatedData['user_id']){
+                return $this->sendError('Unauthorized. Please login first.', 401);
+            }
+            
             $validatedData['slug'] = $this->generateSlug($validatedData['title']);
 
             if ($request->hasFile('imageUrl')) {

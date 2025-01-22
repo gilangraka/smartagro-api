@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Exception;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Illuminate\Support\Facades\Http;
 
 class RegisterController extends BaseController
 {
@@ -25,19 +26,31 @@ class RegisterController extends BaseController
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
+                'image' => 'required|file|mimes:jpeg,jpg,png|max:5120', 
+                'bio' => 'nullable|string|max:255',
             ]);
 
+            $bio = $validatedData['bio'] ?? null;
+
             Log::info('RegisterController: ' . $validatedData['name'] . ' is trying to register.');
+
+            $imageUrl = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $filename = 'profile_' . preg_replace('/\s+/', '_', strtolower($validatedData['email'])) . '.' . $image->getClientOriginalExtension();
+                $filePath = $image->storeAs('profile_images', $filename, 'public');
+                $imageUrl = asset('storage/' . $filePath);
+            }
 
             $user = User::create([
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
+                'image' => $imageUrl,
+                'bio' => $validatedData['bio'] ?? null,
             ]);
 
             $token = $user->createToken('authToken')->plainTextToken;
-
-            
 
             return $this->sendResponse(['user' => $user, 'token' => $token], 'User registered successfully.');
         } catch (BadRequestHttpException $e) {

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
 
-class LogoutController extends Controller
+class LogoutController extends BaseController
 {
     /**
      * Handle the incoming request.
@@ -14,9 +14,9 @@ class LogoutController extends Controller
     {
         try {
             $request->user()->currentAccessToken()->delete();
-            return response()->json(['message' => 'Logged out'], 200);
+            return $this->sendResponse(null, 'Logged out successfully');
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return $this->sendError('An error occurred: ' . $e->getMessage(), 500);
         }
     }
 }

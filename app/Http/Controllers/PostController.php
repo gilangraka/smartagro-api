@@ -9,65 +9,102 @@ use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\PostComment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class PostController extends BaseController
 {
-    public function index(IndexRequest $request)
+    public function index(Request $request)
     {
         try {
-            $params = $request->validated();
-            $search = $params['q'] ?? null;
-            $perPage = $params['per_page'] ?? 10;
-            $orderBy = $params['order_by'] ?? 'created_at';
-            $orderDirection = $params['order_direction'] ?? 'desc';
+            $validatedData = $request->validate([
+                'q' => 'nullable|string',
+                'per_page' => 'nullable|integer',
+                'order_by' => 'nullable|string',
+                'order_direction' => 'nullable|in:asc,desc',
+            ]);
 
-            $data = Post::with(['user:id,name'])
-                ->withCount('postComments')
-                ->select(['id', 'title', 'slug', 'imageUrl'])
-                ->when(
-                    !is_null($search),
-                    fn($q) => $q->where('name', 'like', "%$search%")
-                )
+            $search = $validatedData['q'] ?? null;
+            $perPage = $validatedData['per_page'] ?? 10;
+            $orderBy = $validatedData['order_by'] ?? 'created_at';
+            $orderDirection = $validatedData['order_direction'] ?? 'desc';
+
+            $data = Post::with(['user:id,name,image', 'postComments' => function ($query) {
+                    $query->selectRaw('count(*) as count, post_id')
+                        ->groupBy('post_id');
+                }])
+                ->select(['id', 'title', 'slug', 'imageUrl', 'content', 'user_id', 'created_at'])
+                ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
 
-            return $this->sendResponse($data, '', true);
+            $data->getCollection()->each(function ($item) {
+                $item->makeHidden('user_id');
+                $item->postComments->each(function ($comment) {
+                    $comment->makeHidden('post_id');
+                });
+            });
+
+            return $this->sendResponse($data, 'Posts fetched successfully.');
         } catch (\Exception $e) {
-            return $this->sendError($e->getMessage(), 500);
+            return $this->sendError('Error fetching posts: ' . $e->getMessage(), 500);
         }
     }
 
-    public function show($id)
+
+    public function show($slug)
     {
         try {
+            $id = Post::where('slug', $slug)->value('id');
             $data = Post::with([
-                'user:id,name',
-                'category:id,name',
-                'postComments:id,comment,user_id,updated_at',
-                'postComments.user:id,name'
+                'user:id,name,image',
+                'postComments' => function ($query) use ($id) {
+                    $query->select(['id', 'post_id', 'user_id', 'comment', 'created_at'])
+                        ->with(['user:id,name,image'])
+                        ->where('post_id', $id);
+                },
             ])
-                ->find($id);
-            if (!$data) return $this->sendError('Post not found!');
+            ->select(['id', 'title', 'slug', 'imageUrl', 'content', 'user_id', 'created_at'])
+            ->find($id);
 
-            return $this->sendResponse($data);
+            if (!$data) {
+                return $this->sendError('Post not found!', 404);
+            }
+
+            $data->comments_count = $data->postComments->count();
+
+            $data->makeHidden('user_id');
+            $data->postComments->each(function ($comment) {
+                $comment->makeHidden('post_id');
+                $comment->makeHidden('user_id');
+            });
+
+            return $this->sendResponse($data, 'Post details fetched successfully.');
         } catch (\Exception $e) {
-            return $this->sendError($e->getMessage(), 500);
+            return $this->sendError('Error fetching post: ' . $e->getMessage(), 500);
         }
     }
 
-    public function store(StorePostRequest $request)
+
+    public function store(Request $request)
     {
         try {
-            $params = $request->validated();
+            $params = $request->validate([
+                'category_id' => ['required', 'exists:m_post_categories,id'],
+                'title' => ['required', 'unique:posts,title'],
+                'content' => ['required'],
+                'imageUrl' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:10240'],
+            ]);
             $params['user_id'] = Auth::id();
 
             $slug = Str::slug($params['title']);
             $count = Post::where('slug', $slug)->count();
             if ($count > 0) {
                 $slug .= '-' . ($count + 1);
+                return $this->sendError('Post already exists!', 400);
             }
+
             $params['slug'] = $slug;
 
             $file = $request->file('imageUrl');
@@ -77,6 +114,13 @@ class PostController extends BaseController
 
             $data = new Post($params);
             $data->save();
+
+            $data = Post::with(['user:id,name', 'category:id,name'])
+                ->withCount('postComments')
+                ->select(['id', 'title', 'slug', 'imageUrl','user_id', 'category_id'])
+                ->find($data->id);
+            
+            $data->makeHidden(['user_id', 'category_id']);
 
             return $this->sendResponse($data);
         } catch (\Exception $e) {
