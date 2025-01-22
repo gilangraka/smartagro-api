@@ -28,11 +28,12 @@ class PlantDiseaseUserController extends BaseController
                 ->orderBy('created_at', $orderDirection)
                 ->paginate($perPage);
 
-            $treatment_id = $plant_diseases->treatment_id;
-            $treatment = Treatment::where('id', $treatment_id)->get();
-
-            $plant_diseases->treatment = $treatment;
-            unset($plant_disease->treatment_id);
+            $plant_diseases->getCollection()->transform(function ($plant_disease) {
+                $treatment = Treatment::where('id', $plant_disease->treatment_id)->first(); 
+                $plant_disease->treatment = $treatment; 
+                unset($plant_disease->treatment_id); 
+                return $plant_disease;
+            });
 
             return response()->json($plant_diseases, 200);
         } catch (\Exception $e) {
