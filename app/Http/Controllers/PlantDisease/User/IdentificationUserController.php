@@ -131,7 +131,7 @@ class IdentificationUserController extends BaseController
 
             $responseData = Cache::remember($cacheKey, now()->addMinutes(30), function () use ($file, $latitude, $longitude) {
                 return Http::withHeaders([
-                    'Api-Key' => env('PLANT_ID_API_KEY'),
+                    'Api-Key' =>'ebJyUN9jBHhhRxolwKqQwqvPe8Wi3NbRRqvNASOaUYFydfJDgI',
                 ])->attach(
                     'images', fopen($file->getRealPath(), 'r'), $file->getClientOriginalName()
                 )->post('https://plant.id/api/v3/identification', [
@@ -156,7 +156,7 @@ class IdentificationUserController extends BaseController
             $image_url = $responseData['input']['images'][0] ?? null;
 
             $conversation = Http::withHeaders([
-                'Api-Key' => env('PLANT_ID_API_KEY'),
+                'Api-Key' => 'ebJyUN9jBHhhRxolwKqQwqvPe8Wi3NbRRqvNASOaUYFydfJDgI',
             ])->post('https://plant.id/api/v3/identification/'.$responseData['access_token'].'/conversation', [
                 "question" => $name . " Translate this text into Indonesian, keeping the context related to plants and agriculture while maintaining proper capitalization.",
                 "prompt" => "Provide a simple explanation of the plant's name in Indonesian and include basic information about how to grow it, focusing on cultivation methods such as planting, watering, sunlight, and soil requirements, in a way that's easy for anyone to understand.",
