@@ -38,7 +38,6 @@ class DiscussesController extends BaseController
                 ->when($search, fn($query) => $query->where('title', 'like', "%$search%"))
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
-
             return $this->sendResponse($data, 'Discussions fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Error fetching discussions: ' . $e->getMessage(), 500);
