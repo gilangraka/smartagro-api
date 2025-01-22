@@ -68,7 +68,7 @@ class DiscussesCommentController extends BaseController
         } catch (\Exception $e) {
             // Log error jika terjadi kesalahan
             Log::error('Error fetching comments by user ID', [
-                'user_id' => $user_id,
+                'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
 
