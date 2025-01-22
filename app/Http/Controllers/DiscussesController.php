@@ -39,12 +39,12 @@ class DiscussesController extends BaseController
                 ->orderBy($orderBy, $orderDirection)
                 ->paginate($perPage);
 
-            $data->getCollection()->each(function ($item) {
-                $item->makeHidden('user_id');
-                $item->discussComments->each(function ($comment) {
-                    $comment->makeHidden('discus_id');
-                });
-            });
+            // $data->getCollection()->each(function ($item) {
+            //     $item->makeHidden('user_id');
+            //     $item->discussComments->each(function ($comment) {
+            //         $comment->makeHidden('discus_id');
+            //     });
+            // });
 
             return $this->sendResponse($data, 'Discussions fetched successfully.');
         } catch (\Exception $e) {
