@@ -23,6 +23,11 @@ class Discuss extends Model
         return $value ? "https://smartagro-api.sightway.my.id/storage/discusses/{$value}" : null;
     }
 
+    public function getTitleAttribute($value)
+    {
+        return "Test $value";
+    }
+
     public function discuss()
     {
         return $this->belongsTo(Discuss::class, 'discuss_id');
