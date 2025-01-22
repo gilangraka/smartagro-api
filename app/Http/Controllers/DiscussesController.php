@@ -68,7 +68,7 @@ class DiscussesController extends BaseController
                 $comment->makeHidden('discus_id');
                 $comment->makeHidden('user_id');
             });
-            return $data->getAttributes();
+
             return $this->sendResponse($data, 'Discussion details fetched successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Error fetching discussion: ' . $e->getMessage(), 500);
