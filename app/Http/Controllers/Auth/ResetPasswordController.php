@@ -6,14 +6,14 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\ResetCodePassword;
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class ResetPasswordController extends BaseController
 {
     public function __invoke(ResetPasswordRequest $request)
     {
-        $passwordReset = ResetCodePassword::firstWhere('code', $request->code);
-
-        if ($passwordReset->isExpire()) return $this->sendError('code expired');
+        $passwordReset = ResetCodePassword::where('code', $request->code)->first();
+        if (!$passwordReset) return $this->sendError('Invalid code!', 404);
 
         $user = User::firstWhere('email', $passwordReset->email);
 
