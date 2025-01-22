@@ -87,7 +87,7 @@ class AddHistoryController extends BaseController
 
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
-            $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
+            // $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
             $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
 
@@ -134,7 +134,7 @@ class AddHistoryController extends BaseController
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
                 'treatment_id' => $treatmentRecord->id,
-                'is_redundant' => $redundant,
+                // 'is_redundant' => $redundant,
             ]);
 
             $historyDisease = [
@@ -145,7 +145,7 @@ class AddHistoryController extends BaseController
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
                 'treatment_id' => $treatmentRecord,
-                'is_redundant' => $redundant,
+                // 'is_redundant' => $redundant,
             ];
 
             Storage::delete($filePath);

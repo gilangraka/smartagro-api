@@ -14,7 +14,7 @@ class HistoryDisease extends Model
         'lat',
         'long',
         'disease',
-        'is_redundant',
+        // 'is_redundant',
         'probability',
         'similar_images',
         'treatment_id',

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('lat', 10, 8)->nullable();
             $table->decimal('long', 11, 8)->nullable();
             $table->string('disease');
-            $table->boolean('is_redundant')->default(false);
+            // $table->boolean('is_redundant')->default(false);
             $table->decimal('probability', 8, 2)->nullable();
             $table->text('similar_images')->nullable();
             $table->foreignId('treatment_id')->constrained('treatments');

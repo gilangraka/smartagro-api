@@ -80,7 +80,7 @@ class PlantDisease extends BaseController
             // Extract disease information
             $disease = $responseData['result']['disease']['suggestions'][0]['name'] ?? null;
             $probability = $responseData['result']['disease']['suggestions'][0]['probability'] ?? null;
-            $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
+            // $redundant = $responseData['result']['disease']['suggestions'][0]['redundant'] ?? null;
             $treatment = $responseData['result']['disease']['suggestions'][0]['details']['treatment'] ?? [];
             $similar_image = $responseData['result']['disease']['suggestions'][0]['similar_images'][0]['url'] ?? null;
             $image_url = $responseData['input']['images'][0] ?? null;
@@ -130,7 +130,7 @@ class PlantDisease extends BaseController
                 'probability' => $probability,
                 'similar_images' => $similar_image, 
                 'treatment_id' => $treatment,
-                'is_redundant' => $redundant,
+                // 'is_redundant' => $redundant,
             ];
 
             // Clean up the uploaded file after processing
