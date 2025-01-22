@@ -18,6 +18,8 @@ class Discuss extends Model
         'imageUrl',
     ];
 
+    public static $snakeAttributes = false;
+
     public function getImageUrlAttribute($value)
     {
         return "https://smartagro-api.sightway.my.id/storage/discusses/{$value}";
