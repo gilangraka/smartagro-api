@@ -88,8 +88,6 @@ class DiscussesController extends BaseController
         }
     }
 
-    
-
 
     public function getDiscussByUserId($userId, Request $request)
     {

@@ -47,32 +47,25 @@ class DiscussesCommentController extends BaseController
     public function getCommentsByUserId($userId)
     {
         try {
-            // Validasi apakah userId adalah angka
             if (!is_numeric($userId)) {
                 return $this->sendError('Invalid user ID.', 400);
             }
 
-            // Ambil data komentar berdasarkan userId
-            $data = DiscussComment::with(['discuss:id,comment'])
-                ->where('user_id', $userId)
+            $data = DiscussComment::where('user_id', $userId)
                 ->orderBy('created_at', 'desc')
                 ->paginate(5);
 
-            // Periksa apakah data kosong
             if ($data->isEmpty()) {
                 return $this->sendResponse([], 'No comments found for the given user.');
             }
 
-            // Kembalikan respons sukses dengan data
             return $this->sendResponse($data, 'Comments fetched successfully.');
         } catch (\Exception $e) {
-            // Log error jika terjadi kesalahan
             Log::error('Error fetching comments by user ID', [
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
 
-            // Kembalikan respons error
             return $this->sendError('Error fetching comments. Please try again later.', 500);
         }
     }
